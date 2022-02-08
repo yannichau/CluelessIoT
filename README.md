@@ -28,7 +28,7 @@
 ## Sensor Details
 
 1. TMP006: Thermopile (non-contact temperature sensor
-2. Si7021: Air temperature and humidity sensor
+2. Si7021: Air temperature and humidity sensor https://github.com/ControlEverythingCommunity/SI7021 
 3. CCS811: Air quality sensor
 
 Other potentially useful items
