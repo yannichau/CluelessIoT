@@ -120,7 +120,7 @@ class Infrared:
         return res
     
     def reset(self):
-        self.write(_CONFIG_REG, _RESET) # Reset device and initialise memory
+        self.write(0x42, _RESET) # Reset device and initialise memory #TODO: Testing Fix this later
     
     def check_ID(self):
         self.write(_CONFIG_REG, _M_REG)
@@ -170,4 +170,4 @@ class Infrared:
     
     def process_temp(self):
         pass
-        # If we want to deal with calibration, then we will need to implement a bunch of parameters here
+        # If we want to deal with calibration, then we will need to implement a bunch of parameters here´
