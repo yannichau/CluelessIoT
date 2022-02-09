@@ -78,10 +78,10 @@ _DRDY = 0x0080 # CONFIG[7] contains data regarding DRDY (see above)
 
 # ADC Conversion Rates for _CONFIG[11:9]
 _ADC_1 = 0x0000 # 000 for 4 conversions/sec, 1 samples averaged in total, p-p noise of 0.5oC
-_ADC_2 = 0x2000 # 001 for 2 conversions/sec, 2 samples averaged in total, p-p noise of 0.35oC
-_ADC_4 = 0x4000 # 010 for 1 conversions/sec, 4 samples averaged in total, p-p noise of 0.25oC
-_ADC_8 = 0x6000 # 011 for 0.5 conversions/sec, 8 samples averaged in total, p-p noise of 0.18oC
-_ADC_16 =0x8000 # 100 for 0.25 conversions/sec, 16 samples averaged in total, p-p noise of 0.125oC
+_ADC_2 = 0x0200 # 001 for 2 conversions/sec, 2 samples averaged in total, p-p noise of 0.35oC
+_ADC_4 = 0x0400 # 010 for 1 conversions/sec, 4 samples averaged in total, p-p noise of 0.25oC
+_ADC_8 = 0x0600 # 011 for 0.5 conversions/sec, 8 samples averaged in total, p-p noise of 0.18oC
+_ADC_16 =0x0800 # 100 for 0.25 conversions/sec, 16 samples averaged in total, p-p noise of 0.125oC
 
 # Manufacturer ID Register: ID15-ID0 (16 bits). Should read 0x5449 (R)
 _M_REG = 0xFE
@@ -101,35 +101,40 @@ class Infrared:
         self.reset()
         print("reset success")
         self.check_ID()
-        print("manufacturer and device id matches expected value")
-        self.config(_MODEON, adc_rate, _EN_DRDY)
+        print("Manufacturer and Device ID matches expected value")
+        self.config(_MODEON, adc_rate, 0x0000) # Dont need to enable DRDY
         
     # Write two bytes with 0 offset
-    # TODO: FIX
     def write(self, register, value):
-        val_1 = (value >> 8) & 0xFF
-        val_2 = value & 0xFF
-        msg = smbus2.i2c_msg.write(register, [val_1, val_2]) # Need to write byte by byte
-        self.device.i2c_rdwr(msg)
+        print("    Writing to register " + hex(register) + " with value " + hex(value))
+        msb = (value >> 8) & 0xFF
+        lsb = value & 0xFF
+        print("    Value bytes (msb, lsb): " + hex(msb) + " , " + hex(lsb))
+        self.device.write_i2c_block_data(_ADDRESS, register, [msb, lsb]) # Need to write byte by byte
     
-    # Read 1 byte with 0 offset
-    # TODO: FIX
-    def read_byte(self, register):
-        msg = smbus2.i2c_msg.read(register, 1)
-        res = self.device.i2c_rdwr(msg)
+    # Read 2 byte with 0 offset
+    def read(self, register):
+        print("    Reading register " + hex(register))
+        block = self.device.read_i2c_block_data(_ADDRESS, register, 2)
+        print("    Block of bytes" + str(block))
+        msb = block[0]
+        lsb = block[1]
+        res = (msb  << 8) | lsb ;
         return res
     
     def reset(self):
-        self.write(0x42, _RESET) # Reset device and initialise memory #TODO: Testing Fix this later
+        self.write(_CONFIG_REG, _RESET) # Reset device and initialise memory
     
     def check_ID(self):
-        self.write(_CONFIG_REG, _M_REG)
-        sleep(0.1)
-        res = self.read_byte(_CONFIG_REG)
+        # Check Manufacturer ID
+        res = self.read(_M_REG)
+        print("Manufacturer ID: " + hex(res))
         if res != _M_ID:
             raise RuntimeError("Not correct manufacturer ID")
-        self.write(_CONFIG_REG, _DEV_ID)
-        res = self.read_byte(_CONFIG_REG)
+
+        # Check Device ID
+        res = self.read(_DEV_REG)
+        print("Device ID: " + hex(res))
         if res != _DEV_ID:
             raise RuntimeError("Not correct manufacturer ID")
     
@@ -137,35 +142,49 @@ class Infrared:
     def config(self, op_mode, adc_rate, drdyen):
         config_cmd = op_mode | adc_rate | drdyen
         self.write(_CONFIG_REG, config_cmd)
-        print("configured to operation mode " + str(op_mode) + ", adc rate of " + str(adc_rate) + ", and data ready enable status " + str(drdyen))
+        print("Configured to operation mode " + hex(op_mode) + ", adc mode of " + hex(adc_rate) + ", and data ready enable status " + hex(drdyen))
+        config = self.read(_CONFIG_REG)
+        print("Confiured to " + hex(config))
 
     def set_active(self, set):
         status = self.read(_CONFIG_REG)
         cmd = None
         if set:
             cmd = status | _MODEON # Set to active
+            print("Device set to active")
         else:
             cmd = status & ~(_MODEON) # Set to power off
+            print("Device powered off")
         self.write(_CONFIG_REG, cmd)
 
     def is_active(self):
         msg = self.read(_CONFIG_REG)
-        active_status = msg & _MODEON # Bitwise operator: Checks if operation mode bit in config reg is 1.
-        return active_status == 1
+        res = (msg & 0b0111000000000000) == _MODEON # Bitwise operator: Checks if operation mode bit in config reg is 1.
+        if res:
+            print("Device is active")
+        else:
+            print("Device is not active")    
+        return res
 
     def is_ready(self):
         msg = self.read(_CONFIG_REG)
-        ready_status =  msg & _DRDY # Bitwise operator: Checks if _DRDY bit in config reg is 1.
-        return ready_status == 1 # 1 if ready
+        res = (msg & 0b0000000010000000) == _DRDY # Bitwise operator: Checks if _DRDY bit in config reg is 1.
+        if res:
+            print("Device is ready")
+        else:
+            print("Conversion in progress or data ready pin not enabled.")  
+        return res
 
     def read_temp(self):
         raw = self.read(_TEMP_REG)
         temp = (raw >> 2)/32.0
+        print("temperature: " + str(temp))
         return temp
     
     def read_voltage(self):
         msg = self.read(_VOLTAGE_REG)
         voltage = msg * 156.25e-9
+        print("voltage: " + str(voltage))
         return voltage
     
     def process_temp(self):
