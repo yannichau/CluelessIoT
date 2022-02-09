@@ -104,10 +104,12 @@ class Infrared:
         print("manufacturer and device id matches expected value")
         self.config(_MODEON, adc_rate, _EN_DRDY)
         
-    # Write one more bytes with 0 offset
+    # Write two bytes with 0 offset
     # TODO: FIX
     def write(self, register, value):
-        msg = smbus2.i2c_msg.write(register, [value])
+        val_1 = (value >> 8) & 0xFF
+        val_2 = value & 0xFF
+        msg = smbus2.i2c_msg.write(register, [val_1, val_2]) # Need to write byte by byte
         self.device.i2c_rdwr(msg)
     
     # Read 1 byte with 0 offset
