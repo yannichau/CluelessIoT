@@ -25,7 +25,6 @@ class AirQuality:
     _APP_START = 0xF4
     #_SW_RESET = 0xFF
     # Universal Values
-    _STATUS_VAL = 0b10010000
     _MEAS_MODE_VAL = 0
     _HW_ID_VAL = 0x81
     _HW_VERSION_VAL = 0x10
@@ -41,22 +40,26 @@ class AirQuality:
         HW_VERSION_VAL &= 0xF0
         assert (HW_VERSION_VAL == self._HW_VERSION_VAL), "HW_VERSION is incorrect!"
         sleep(0.01)
-        print("Device versions are correct. \n")
+        print("Device versions are correct.")
 
         # Checking if Device is Ready
         STATUS_VAL = self.device.read_byte_data(self._ADDRESS, self._STATUS)
         self.load_firmware(STATUS_VAL)
 
 
+
     def load_firmware(self, current_status):
-        assert (current_status & 0b00000001 == 0b00000001), "There is an error on the I²C or sensor!"
-        assert (current_status & 0b00010000 == 0b00000000), "No valid firmware application is loaded!"
-        if (current_status & 0b10010000 == 0b00010000):
-            print("Loading firmware... \n")
-            self.device.write_byte_data(self._ADDRESS, self._APP_START, 0x00)
-            print("Firmware loaded. \n")
-        elif(current_status & 0b10010000 == 0b10010000):
-            print("Firmware is already loaded. \n")
+        assert ((current_status & 0b00000001) == 0b00000000), "There is an error on the I²C or sensor!"
+        assert (current_status & 0b00010000 == 0b00010000), "No valid firmware application is loaded!"
+        if (current_status & 0b10010001 == 0b00010000):
+            print("Loading firmware...")
+            self.device.write_byte(self._ADDRESS, self._APP_START)
+            sleep(0.01)
+            current_status = self.device.read_byte_data(self._ADDRESS, self._STATUS)
+            sleep(0.01)
+        if(current_status & 0b10010001 == 0b10010000):
+            print("Firmware is loaded.")
+        sleep(0.01)
         
 
 def main():
