@@ -92,26 +92,28 @@ _DEV_REG = 0xFF
 _DEV_ID = 0x67
 
 
-class INFRARED:
+class Infrared:
 
     # Constructor to define class members/ attributes. Default to 1 conversions per second, with 4 samples in total.
     def __init__(self, address=_ADDRESS, adc_rate=_ADC_4):
         self.device = smbus2.SMBus(1)
         # self.device.pec = 1 # Enable packet error checking (currently disabled)
         self.reset()
+        print("reset success")
         self.check_ID()
+        print("manufacturer and device id matches expected value")
         self.config(_MODEON, adc_rate, _EN_DRDY)
         
     # Write one more bytes with 0 offset
     # TODO: FIX
     def write(self, register, value):
-        msg = smbus2.i2c_msg.write(_ADDRESS, [value])
+        msg = smbus2.i2c_msg.write(register, [value])
         self.device.i2c_rdwr(msg)
     
     # Read 1 byte with 0 offset
     # TODO: FIX
     def read_byte(self, register):
-        msg = smbus2.i2c_msg.read(_ADDRESS, 1)
+        msg = smbus2.i2c_msg.read(register, 1)
         res = self.device.i2c_rdwr(msg)
         return res
     
@@ -133,6 +135,7 @@ class INFRARED:
     def config(self, op_mode, adc_rate, drdyen):
         config_cmd = op_mode | adc_rate | drdyen
         self.write(_CONFIG_REG, config_cmd)
+        print("configured to operation mode " + str(op_mode) + ", adc rate of " + str(adc_rate) + ", and data ready enable status " + str(drdyen))
 
     def set_active(self, set):
         status = self.read(_CONFIG_REG)
