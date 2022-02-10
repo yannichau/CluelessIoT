@@ -45,7 +45,7 @@ class AirQuality:
         STATUS_VAL = self.device.read_byte_data(self._ADDRESS, self._STATUS)
         self.load_firmware(STATUS_VAL)
 
-        self.read_VoCs()
+        self.read_gas_amounts()
 
 
 
