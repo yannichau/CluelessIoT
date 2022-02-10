@@ -67,13 +67,18 @@ class AirQuality:
         self.device.write_byte_data(self._ADDRESS, self._MEAS_MODE, 0b00010000)
         print("Measurements Activated.")
         print("________________________")
-        print("Upper two Bytes are Co2, Lower two Bytes are TVOC.")
+        print("Upper value is Co2, Lower two Bytes is TVOC.")
         sleep(4)
+        file = open("gasdata.txt", "a")
+        time = 0
         while (True):
             Alg_data = self.device.read_i2c_block_data(self._ADDRESS, self._ALG_RESULT_DATA, 4)
-            
-            print(Alg_data)
+            Co2_data = Alg_data[0]*16+Alg_data[1]
+            Voc_data = Alg_data[2]*16+Alg_data[3]
+            file.write(str(time) + " CO2: " + str(Co2_data) + " VOC: " + str(Voc_data) + "\n")
+            print(Co2_data, " | ", Voc_data)
             sleep(0.9)
+            time += 1
 
 def main():
     AirQuality()
