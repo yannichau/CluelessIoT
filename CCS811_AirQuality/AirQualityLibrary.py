@@ -25,7 +25,6 @@ class AirQuality:
     _APP_START = 0xF4
     #_SW_RESET = 0xFF
     # Universal Values
-    _MEAS_MODE_VAL = 0
     _HW_ID_VAL = 0x81
     _HW_VERSION_VAL = 0x10
     #_BOOT_SEQUENCE_VAL = [0x11, 0xE5, 0x72, 0x8A]
@@ -46,6 +45,8 @@ class AirQuality:
         STATUS_VAL = self.device.read_byte_data(self._ADDRESS, self._STATUS)
         self.load_firmware(STATUS_VAL)
 
+        self.read_VoCs()
+
 
 
     def load_firmware(self, current_status):
@@ -60,7 +61,19 @@ class AirQuality:
         if(current_status & 0b10010001 == 0b10010000):
             print("Firmware is loaded.")
         sleep(0.01)
-        
+
+    def read_gas_amounts(self):
+        print("Activating Measurements...")
+        self.device.write_byte_data(self._ADDRESS, self._MEAS_MODE, 0b00010000)
+        print("Measurements Activated.")
+        print("________________________")
+        print("Upper two Bytes are Co2, Lower two Bytes are TVOC.")
+        sleep(4)
+        while (True):
+            Alg_data = self.device.read_i2c_block_data(self._ADDRESS, self._ALG_RESULT_DATA, 4)
+            
+            print(Alg_data)
+            sleep(0.9)
 
 def main():
     AirQuality()
