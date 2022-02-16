@@ -23,4 +23,4 @@ ready = device.is_ready()
 
 device.print_config()
 
-[temp, voltage] = device.collect_reading()
+[temp, voltage] = device.collect_readings()

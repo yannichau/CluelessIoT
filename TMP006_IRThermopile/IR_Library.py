@@ -207,14 +207,14 @@ class Infrared:
             print("Conversion in progress or data ready pin not enabled.")  
         return res
 
-    def collect_reading(self):
+    def collect_readings(self):
         sleep(0.1)
         temp = self.read_temp()
         voltage = self.read_voltage()
-        print("----------------------")
-        print("Collecting Readings")
-        print(" Temperature: " + str(temp))
-        print(" Voltage: " + str(voltage))
+        # print("----------------------")
+        # print("Collecting Readings")
+        # print(" Temperature: " + str(temp))
+        # print(" Voltage: " + str(voltage))
         return [temp,voltage]
 
     def read_temp(self):
