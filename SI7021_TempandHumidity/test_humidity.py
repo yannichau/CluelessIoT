@@ -5,6 +5,8 @@ device = Humidity_Library.Humidity()
 
 print("Initialisation completed")
 
-device.collect_readings()
+while True:
+    device.collect_readings()
+    sleep(1)
 
 print("Test completed")

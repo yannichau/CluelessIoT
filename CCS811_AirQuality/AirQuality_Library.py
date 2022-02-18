@@ -46,6 +46,7 @@ class AirQuality:
         self.load_firmware(STATUS_VAL)
 
         # self.read_gas_amounts()
+        self.start_measurements() #TODO: Is this valid?
 
     def load_firmware(self, current_status):
         assert ((current_status & 0b00000001) == 0b00000000), "There is an error on the I²C or sensor!"
@@ -78,8 +79,14 @@ class AirQuality:
             sleep(0.9)
             time += 1
 
-    def get_gas_amounts(self):
+    def start_measurements(self):
+        print("Activating Measurements...")
         self.device.write_byte_data(self._ADDRESS, self._MEAS_MODE, 0b00010000)
+        print("Measurements Activated.")
+        sleep(4)
+
+    # MUST RUN start_measurements() before getting gas amounts
+    def get_gas_amounts(self):
         Alg_data = self.device.read_i2c_block_data(self._ADDRESS, self._ALG_RESULT_DATA, 4)
         Co2_data = Alg_data[0]*16+Alg_data[1]
         Voc_data = Alg_data[2]*16+Alg_data[3]

@@ -24,9 +24,10 @@ class Middleman:
         self.IR_device = IR_Library.Infrared()
         self.AQ_device = AirQuality_Library.AirQuality()
         self.RH_device = Humidity_Library.Humidity()
+        
         print("Middleman: All devices successfully initialised!")
-        sleep(4)
 
+        
     def collect_data(self):
         [co2, voc] = self.AQ_device.get_gas_amounts()
         [temp, voltage] = self.IR_device.collect_readings()

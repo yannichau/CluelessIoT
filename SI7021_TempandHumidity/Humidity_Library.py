@@ -5,9 +5,9 @@ class Humidity:
     _ADDRESS = 0x40
     
     # Commands
-    _READ_HUMIDITY = 0xE5
-    _READ_PREV_TEMP = 0xE0
-    _READ_TEMP = 0xE3
+    _READ_HUMIDITY = 0xE5 # TODO: This is potentially problematic
+    _READ_PREV_TEMP = 0xE0 # TODO: This is potentially problematic
+    _READ_TEMP = 0xE3 # TODO: This is potentially problematic
     _RESET = 0xFE
     _READ_USER_REG = 0xE7
     _WRITE_USER_REG = 0xE6
@@ -24,7 +24,7 @@ class Humidity:
     def __init__(self, address=_ADDRESS):
         self._ADDRESS = address
         self.device = SMBus(3)
-        # self.check_device()
+        self.check_device()
 
     # Write bytes (default 1 byte)
     def write(self, register, value, bytes=1):
@@ -48,10 +48,11 @@ class Humidity:
         else:
             # print("    Reading register " + hex(register))
             block = self.device.read_i2c_block_data(self._ADDRESS, register, bytes)
-            # print("    Block of bytes" + str(block))
+            print("    Block of bytes" + str(block))
             for i in range(bytes):        
-                msb = block[i]
-                res = (msb  << (bytes-i-1)*8) | res ;
+                byte = block[i]
+                print("    " + hex(byte))
+                res = res | (byte  << (bytes-i-1)*8) ;
         return res
     
     def check_device(self):
@@ -59,6 +60,7 @@ class Humidity:
         write = i2c_msg.write(self._ADDRESS, [0XFA, 0x0F])
         read = i2c_msg.read(self._ADDRESS, 8)
         self.device.i2c_rdwr(write, read)
+        sleep(0.5)
         print(write)
         print(read)
 
@@ -66,6 +68,7 @@ class Humidity:
         write = i2c_msg.write(self._ADDRESS, [0XFC, 0xC9])
         read = i2c_msg.read(self._ADDRESS, 6)
         self.device.i2c_rdwr(write, read)
+        sleep(0.5)
         print(write)
         print(read)
 
@@ -73,6 +76,7 @@ class Humidity:
         write = i2c_msg.write(self._ADDRESS, [0x84, 0xB8])
         read = i2c_msg.read(self._ADDRESS, 8)
         self.device.i2c_rdwr(write, read)
+        sleep(0.5)
         print(write)
         print(read)
 
@@ -80,6 +84,7 @@ class Humidity:
         # self.device.write_i2c_block_data(self._ADDRESS, [0xFA, 0x0F], )
         sleep(0.1)
         res = self.device.read_i2c_block_data(self._ADDRESS, 0xFA, 8)
+        sleep(0.5)
         res_2 = self.device.read_i2c_block_data(self._ADDRESS, 0x0F, 8)
         print(res)
         print(res_2)
@@ -100,15 +105,17 @@ class Humidity:
         # print(res)
     
     def collect_readings(self):
-        sleep(0.1)
         humidity_raw = self.read(self._READ_HUMIDITY, 2)
-        temp_raw = self.read(self._READ_PREV_TEMP, 2)
+        sleep(0.1)
+
+        temp_raw = self.read(self._READ_TEMP, 2)
+        sleep(0.1)
 
         humidity = (humidity_raw * 125 / 65536.0) - 6
         temp = (temp_raw * 175.72 / 65536.0) - 46.85
 
-        print ("Humidity %%RH: %.2f%%" %humidity)
-        print ("Temperature Celsius: %.2f°C" %temp)
+        print("{:.2f}".format(temp) + "°C, " + "{:.2f}".format(humidity) + "% ")
+
 
         return [humidity, temp]
 
