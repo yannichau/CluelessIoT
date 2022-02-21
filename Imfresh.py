@@ -78,11 +78,11 @@ class Imfresh():
                         break
                 if no_time_available:
                     [datetime.timedelta(days=7) + time for time in self.measurement_times]
-            elif datetime.now() > self.next_time - datetime.timedelta(minutes=20):
+            elif datetime.now() > self.next_time - datetime.timedelta(minutes=20) and datetime.now() < self.next_time:
                 self.sensor_library.collect_data()
-                if datetime.now() > self.next_time and datetime < self.next_time + datetime.timedelta(minutes=self.measurement_interval):
-                    (voc, humidity, temperature) = self.sensor_library.collect_data()
-                    self.record_data(voc, humidity, temperature, datetime.now(), "Temp")
+            elif datetime.now() > self.next_time and datetime < self.next_time + datetime.timedelta(minutes=self.measurement_interval):
+                (voc, humidity, temperature) = self.sensor_library.collect_data()
+                self.record_data(voc, humidity, temperature, datetime.now(), "Temp")
             else:
                 data_cursor = self.data_con.cursor()
                 voc_acc = 0
