@@ -68,7 +68,7 @@ class Imfresh():
 
     def average_data(self, type):
         data_cursor = self.data_con.cursor()
-        voc= 0
+        voc = 0
         humidity = 0
         temperature = 0
         temp_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ?", (type))
@@ -104,11 +104,12 @@ class Imfresh():
                 self.sensor_library.collect_data()
             elif datetime.now() > self.next_time and datetime < self.next_time + datetime.timedelta(minutes=self.measurement_interval):
                 (voc, humidity, temperature) = self.sensor_library.collect_data()
+                voc = 50 if voc > 50 else voc
                 self.record_data(voc, humidity, temperature, datetime.now(), "PeriodicTemp")
             else:
                 voc_avg, humidity_avg, temperature_avg = self.average_data("PeriodicTemp")
                 if(voc_avg or humidity_avg or temperature_avg):
-                    self.record_data(voc_avg, humidity_avg, temperature_avg, datetime.now(), "PeriodicAvg")
+                    self.record_data(voc_avg, humidity_avg, temperature_avg, self.prev_time, "PeriodicAvg")
 
     def realtime(self):
         datapoint = 0
