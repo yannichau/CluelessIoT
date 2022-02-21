@@ -1,5 +1,4 @@
-from re import T
-from numpy import record
+from time import sleep
 from CluelessIoT.Sensors.SensorLibrary import SensorLibrary
 import paho.mqtt.client as mqtt
 from datetime import datetime
@@ -22,6 +21,7 @@ class Imfresh():
         self.wash_day = datetime.date.fromisoformat('2022-2-30')
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
+        self.measuring = False
         # Load settings
         self.load_config()
         # Initialise objects
@@ -111,8 +111,16 @@ class Imfresh():
                     self.record_data(voc_avg, humidity_avg, temperature_avg, datetime.now(), "PeriodicAvg")
 
     def realtime(self):
-    # TODO: Implement Loop with real-time measurements
-        pass
+        datapoint = 0
+        while self.measuring:
+            if(datapoint == 5):
+                datapoint = 0
+                voc_avg, humidity_avg, temperature_avg = self.average_data("RealTimeTemp")
+                # TODO: Use MQTT to send realtime data to the server
+            (voc, humidity, temperature) = self.sensor_library.collect_data()
+            sleep(1)
+            self.record_data(voc, humidity, temperature, datetime.now(), "RealTimeTemp")
+            datapoint += 1
 
     def mqtt_listener(self):
     # TODO: Use MQTT Loop to listen to data from the server
@@ -123,7 +131,7 @@ class Imfresh():
         while True:
             self.periodic()
             # TODO: Use algorithm to produce data
-            # TODO: Use MQTT to send data to the server
+            # TODO: Use MQTT to send periodic data to the server
             # TODO: Use Multithreading to start and stop threads when required
              
 # Main Loop
