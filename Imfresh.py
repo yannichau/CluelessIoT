@@ -1,3 +1,4 @@
+from re import T
 from numpy import record
 from CluelessIoT.Sensors.SensorLibrary import SensorLibrary
 import paho.mqtt.client as mqtt
@@ -29,7 +30,7 @@ class Imfresh():
         # Initialise database
         self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
-        data_cursor.execute("CREATE TABLE IF NOT EXISTS periodic (time TIME, voc REAL, humidity REAL, temperature REAL, type TEXT)")
+        data_cursor.execute("CREATE TABLE IF NOT EXISTS ImFreshData (time TIME, voc REAL, humidity REAL, temperature REAL, type TEXT)")
         data_cursor.commit()
         data_cursor.close()
         # Activate main loop for device
@@ -61,9 +62,30 @@ class Imfresh():
     # Record data to database
         current_stamp = time.isoformat()
         data_cursor = self.data_con.cursor()
-        data_cursor.execute("INSERT INTO periodic VALUES(?, ?, ?, ?, ?, ?)", (current_stamp, voc, humidity, temperature, type))
+        data_cursor.execute("INSERT INTO ImFreshData VALUES(?, ?, ?, ?, ?, ?)", (current_stamp, voc, humidity, temperature, type))
         data_cursor.commit()
         data_cursor.close()
+
+    def average_data(self, type):
+        data_cursor = self.data_con.cursor()
+        voc= 0
+        humidity = 0
+        temperature = 0
+        temp_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ?", (type))
+        if len(temp_data) == 0:
+            data_cursor.close()
+        else:
+            for row in temp_data:
+                voc += row[1]
+                humidity += row[2]
+                temperature += row[3]
+            voc = voc / len(temp_data)
+            humidity = humidity / len(temp_data)
+            temperature = temperature / len(temp_data)
+            data_cursor.execute("DELETE FROM ImFreshData WHERE type = ?", (type))
+            data_cursor.commit()
+            data_cursor.close()
+        return (voc, humidity, temperature)
 
     def periodic(self):
     # Conduct periodic measurements
@@ -82,24 +104,11 @@ class Imfresh():
                 self.sensor_library.collect_data()
             elif datetime.now() > self.next_time and datetime < self.next_time + datetime.timedelta(minutes=self.measurement_interval):
                 (voc, humidity, temperature) = self.sensor_library.collect_data()
-                self.record_data(voc, humidity, temperature, datetime.now(), "Temp")
+                self.record_data(voc, humidity, temperature, datetime.now(), "PeriodicTemp")
             else:
-                data_cursor = self.data_con.cursor()
-                voc_acc = 0
-                humidity_acc = 0
-                temperature_acc = 0
-                temp_data = data_cursor.execute("SELECT * FROM periodic WHERE type = ?", ("Temp"))
-                for row in temp_data:
-                    voc_acc += row[1]
-                    humidity_acc += row[2]
-                    temperature_acc += row[3]
-                voc_avg = voc_acc / len(temp_data)
-                humidity_avg = humidity_acc / len(temp_data)
-                temperature_avg = temperature_acc / len(temp_data)
-                data_cursor.execute("DELETE FROM periodic WHERE type = ?", ("Temp"))
-                data_cursor.commit()
-                data_cursor.close()
-                self.record_data(voc_avg, humidity_avg, temperature_avg, datetime.now(), "Avg")
+                voc_avg, humidity_avg, temperature_avg = self.average_data("PeriodicTemp")
+                if(voc_avg or humidity_avg or temperature_avg):
+                    self.record_data(voc_avg, humidity_avg, temperature_avg, datetime.now(), "PeriodicAvg")
 
     def realtime(self):
     # TODO: Implement Loop with real-time measurements
