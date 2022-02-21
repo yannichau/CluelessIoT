@@ -100,17 +100,23 @@ class Imfresh():
                 data_cursor.commit()
                 data_cursor.close()
                 self.record_data(voc_avg, humidity_avg, temperature_avg, datetime.now(), "Avg")
-                # TODO: Use MQTT to send data to the server
-                # TODO: Use algorithm to produce data
+
+    def realtime(self):
+    # TODO: Implement Loop with real-time measurements
+        pass
+
+    def mqtt_listener(self):
+    # TODO: Use MQTT Loop to listen to data from the server
+        pass
                     
     def activate(self):
     # Activate main loop for device
         while True:
             self.periodic()
-            # TODO: Use MQTT to receive data from the server
-            # TODO: Implement Loop with real-time measurements
-
-            
+            # TODO: Use algorithm to produce data
+            # TODO: Use MQTT to send data to the server
+            # TODO: Use Multithreading to start and stop threads when required
+             
 # Main Loop
 def main():
     device = Imfresh()
