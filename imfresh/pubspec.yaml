@@ -39,6 +39,8 @@ dependencies:
   path_provider: ^2.0.9
   sqflite: ^2.0.2
   mqtt_client: ^9.6.5
+  mobile_scanner: ^0.1.1
+  qr_code_scanner: ^0.7.0
 
 dev_dependencies:
   build_runner:
