@@ -44,3 +44,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Freezed Related
+*.g.dart
+*.freezed.dart
