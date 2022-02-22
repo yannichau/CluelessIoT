@@ -13,10 +13,13 @@ class DatabaseHandler {
   Future<Database> openDB() async {
     String databasesPath = await getDatabasesPath();
     String path = join(databasesPath, "database.db");
-    return openDatabase(path,
-        onCreate: (db, version) => db.execute(
-              'CREATE TABLE periodicReadings(timestamp TEXT PRIMARY KEY, nextWash TEXT, humidity REAL, temperature REAL, airQuality REAL, cleanlinessScore INTEGER)',
-            ));
+    return openDatabase(
+      path,
+      onCreate: (db, version) => db.execute(
+        'CREATE TABLE periodicReadings(timestamp TEXT PRIMARY KEY, nextWash TEXT, humidity REAL, temperature REAL, airQuality REAL, cleanlinessScore INTEGER)',
+      ),
+      version: 1,
+    );
   }
 
   Future<Database> initializeDB() async {
