@@ -38,6 +38,7 @@ dependencies:
   hive_flutter: ^1.1.0
   path_provider: ^2.0.9
   sqflite: ^2.0.2
+  mqtt_client: ^9.6.5
 
 dev_dependencies:
   build_runner:

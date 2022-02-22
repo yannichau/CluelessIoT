@@ -16,7 +16,7 @@ class DatabaseHandler {
     return openDatabase(
       path,
       onCreate: (db, version) => db.execute(
-        'CREATE TABLE periodicReadings(timestamp TEXT PRIMARY KEY, nextWash TEXT, humidity REAL, temperature REAL, airQuality REAL, cleanlinessScore INTEGER)',
+        'CREATE TABLE periodicReadings(timestamp TEXT PRIMARY KEY, deviceID TEXT, nextWash TEXT, humidity REAL, temperature REAL, airQuality REAL, cleanlinessScore INTEGER)',
       ),
       version: 1,
     );

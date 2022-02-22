@@ -8,6 +8,7 @@ class PeriodicReading with _$PeriodicReading {
   factory PeriodicReading({
     required String timestamp,
     required String nextWash,
+    required String deviceID,
     required double humidity,
     required double temperature,
     required double airQuality,
