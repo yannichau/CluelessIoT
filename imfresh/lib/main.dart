@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:imfresh/services/databaseHandler.dart';
+import 'package:path_provider/path_provider.dart';
 
-void main() {
+void main() async {
+  final appDocumentDir = await getApplicationDocumentsDirectory();
+  dbHandler.openDB();
+  Hive.init(appDocumentDir.path);
   runApp(const MyApp());
 }
 
