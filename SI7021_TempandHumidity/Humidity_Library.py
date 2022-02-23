@@ -24,7 +24,10 @@ class Humidity:
     def __init__(self, address=_ADDRESS):
         self._ADDRESS = address
         self.device = SMBus(3)
-        self.check_device()
+        # self.check_device()
+        self.reset()
+        # self.read_userreg()
+        # self.read_heaterreg()
 
     # Write bytes (default 1 byte)
     def write(self, register, value, bytes=1):
@@ -55,6 +58,20 @@ class Humidity:
                 res = res | (byte  << (bytes-i-1)*8) ;
         return res
     
+    def read_userreg(self):
+        msg = self.read(self._READ_USER_REG,2)
+        print("User register data")
+        print(msg)
+
+    def read_heaterreg(self):
+        msg = self.read(self._READ_HEATER_REG,2)
+        print("Heater register data")
+        print(msg)
+
+    def reset(self):
+        self.write(self._RESET, 0x1, 1)
+        print("Device Reset!")
+    
     def check_device(self):
         print("Read electronic ID 1st byte")
         write = i2c_msg.write(self._ADDRESS, [0XFA, 0x0F])
@@ -83,9 +100,9 @@ class Humidity:
         print("    Checking Device ID 1 ")
         # self.device.write_i2c_block_data(self._ADDRESS, [0xFA, 0x0F], )
         sleep(0.1)
-        res = self.device.read_i2c_block_data(self._ADDRESS, 0xFA, 8)
+        res = self.read(0xFA, 8)
         sleep(0.5)
-        res_2 = self.device.read_i2c_block_data(self._ADDRESS, 0x0F, 8)
+        res_2 = self.read(0x0F, 8)
         print(res)
         print(res_2)
 
@@ -108,7 +125,7 @@ class Humidity:
         humidity_raw = self.read(self._READ_HUMIDITY, 2)
         sleep(0.1)
 
-        temp_raw = self.read(self._READ_TEMP, 2)
+        temp_raw = self.read(self._READ_PREV_TEMP, 2)
         sleep(0.1)
 
         humidity = (humidity_raw * 125 / 65536.0) - 6
