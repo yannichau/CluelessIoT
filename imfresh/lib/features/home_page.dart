@@ -36,9 +36,9 @@ class _HomePageState extends State<HomePage> {
         title: Text("Home"),
         actions: [
           IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.settings),
             onPressed: () {
-              Navigator.pushNamed(context, '/addDevice');
+              Navigator.pushNamed(context, '/settings');
             },
           ),
         ],

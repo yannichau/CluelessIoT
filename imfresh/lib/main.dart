@@ -5,6 +5,8 @@ import 'package:imfresh/features/home_page.dart';
 import 'package:imfresh/features/new_device.dart';
 import 'package:imfresh/services/databaseHandler.dart';
 
+import 'features/settings.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   dbHandler.openDB();
@@ -28,6 +30,7 @@ class App extends StatelessWidget {
         '/': (context) => HomePage(),
         // When navigating to the "/second" route, build the SecondScreen widget.
         '/addDevice': (context) => const NewDevice(),
+        '/settings': (context) => const SettingsPage(),
       },
     );
   }
