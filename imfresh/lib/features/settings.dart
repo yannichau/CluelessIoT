@@ -38,7 +38,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           return Container(
                             height:
                                 MediaQuery.of(context).copyWith().size.height *
-                                    0.25,
+                                    0.33,
                             color: Colors.white,
                             child: CupertinoDatePicker(
                               mode: CupertinoDatePickerMode.time,
