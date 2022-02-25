@@ -4,6 +4,8 @@ import paho.mqtt.client as mqtt
 from datetime import datetime
 import sqlite3
 import yaml
+import json
+import threading
 
 class Imfresh():
     # Address to communicate through MQTT. These must be set beforehand
@@ -21,10 +23,13 @@ class Imfresh():
         self.wash_day = datetime.date.fromisoformat('2022-2-30')
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
-        self.measuring = False
-        # Load settings
+        self.do_real_time = False
+        self.measuring_real_time = False
+        self.do_periodic = True
+        self.measuring_periodic = False
+        # Load current settings from config.yaml
         self.load_config()
-        # Initialise objects
+        # Initialise library
         self.sensor_library = SensorLibrary()
         self.client = mqtt.Client()
         # Initialise database
@@ -67,6 +72,7 @@ class Imfresh():
         data_cursor.close()
 
     def average_data(self, type):
+    # Calculate average data from temporary database values
         data_cursor = self.data_con.cursor()
         voc = 0
         humidity = 0
@@ -89,7 +95,7 @@ class Imfresh():
 
     def periodic(self):
     # Conduct periodic measurements
-        while True:
+        while self.do_periodic:
             if datetime.now() > self.next_time + datetime.timedelta(minutes=self.measurement_interval):
                 no_time_available = True
                 for new_time in self.measurement_times:
@@ -110,10 +116,12 @@ class Imfresh():
                 voc_avg, humidity_avg, temperature_avg = self.average_data("PeriodicTemp")
                 if(voc_avg or humidity_avg or temperature_avg):
                     self.record_data(voc_avg, humidity_avg, temperature_avg, self.prev_time, "PeriodicAvg")
+        self.measuring_periodic = False
 
     def realtime(self):
+    # Conduct realtime measurements
         datapoint = 0
-        while self.measuring:
+        while self.do_real_time:
             if(datapoint == 5):
                 datapoint = 0
                 voc_avg, humidity_avg, temperature_avg = self.average_data("RealTimeTemp")
@@ -130,10 +138,18 @@ class Imfresh():
     def activate(self):
     # Activate main loop for device
         while True:
-            self.periodic()
+            if(self.do_periodic and not self.measuring_periodic):
+                self.measuring_periodic = True
+                self.periodic_thread = threading.Thread(target=self.periodic)
+                self.periodic_thread.start()
+            if(self.do_real_time and not self.measuring_real_time):
+                self.measuring_real_time = True
+                self.realtime()
+                realtimethread = threading.Thread(target=self.realtime)
+                realtimethread.start()
+            
             # TODO: Use algorithm to produce data
             # TODO: Use MQTT to send periodic data to the server
-            # TODO: Use Multithreading to start and stop threads when required
              
 # Main Loop
 def main():
