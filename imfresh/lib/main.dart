@@ -5,7 +5,7 @@ import 'package:imfresh/features/home_page.dart';
 import 'package:imfresh/features/new_device.dart';
 import 'package:imfresh/services/databaseHandler.dart';
 
-import 'features/settings.dart';
+import 'features/settings_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
