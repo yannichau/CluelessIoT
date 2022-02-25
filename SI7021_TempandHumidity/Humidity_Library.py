@@ -1,141 +1,177 @@
 from smbus2 import SMBus, i2c_msg
 from time import sleep
-
 class Humidity:
     _ADDRESS = 0x40
-    
-    # Commands
-    _READ_HUMIDITY = 0xE5 # TODO: This is potentially problematic
-    _READ_PREV_TEMP = 0xE0 # TODO: This is potentially problematic
-    _READ_TEMP = 0xE3 # TODO: This is potentially problematic
-    _RESET = 0xFE
-    _READ_USER_REG = 0xE7
-    _WRITE_USER_REG = 0xE6
-    _READ_HEATER_REG = 0x11
-    _WRITE_HEATER_REG = 0x51
-    # _ID1_CMD = bytearray([0xFA, 0x0F])
-    _ID1_CMD = 0xFA0F
-    # _ID2_CMD = bytearray([0xFC, 0xC9])
-    _ID2_CMD = 0xFCC9 # Expect 0x15
-    # FIRMWARE_REV = bytearray([0x84, 0xB8]) #0xFF(Version 1.0) or #0x20(Version 2.0)
-    _FIRMWARE_REV = 0x84B8
 
-    # TODO: Fix hardware check
+    # Commands
+    _READ_HUMIDITY = [0xF5]
+    _READ_PREV_TEMP = [0xE0]
+    _READ_TEMP = [0xF3]
+    _RESET = [0xFE]
+    _READ_USER_REG = [0xE7]
+    _WRITE_USER_REG = [0xE6]
+    _READ_HEATER_REG = [0x11]
+    _WRITE_HEATER_REG = [0x51]
+    _ID1_CMD = [0xFA, 0x0F]
+    _ID2_CMD = [0xFC, 0xC9] # Expect 0x15 in SNB3
+    # FIRMWARE_REV = bytearray([0x84, 0xB8]) 
+    _FIRMWARE_REV = [0x84, 0xB8] # Expect 0xFF(Version 1.0) or #0x20(Version 2.0)
+
+    # Errors
+    DEVICE_ERROR = 0b0
+    FIRMWARE_ERROR = 0b0
+    RANGE_ERROR = 0b0
+
+    # Heater Settings
+    _HEATER_ON = [0b0111110]
+    _HEATER_OFF =[0b0111010]
+
     def __init__(self, address=_ADDRESS):
         self._ADDRESS = address
         self.device = SMBus(3)
-        # self.check_device()
-        self.reset()
-        # self.read_userreg()
-        # self.read_heaterreg()
+        self.check_device()
 
     # Write bytes (default 1 byte)
-    def write(self, register, value, bytes=1):
-        if bytes == 1:
-            self.device.write_byte_data(self._ADDRESS, register, value)
-        else:
-            res = []
-            # print("    Writing to register " + hex(register) + " with value " + hex(value))
-            for i in range(bytes):
-                lsb = (value >> (bytes-i-1)*8) & 0xFF
-                res.append(lsb)
-            print("    Writing block of bytes" + str(res))
-            self.device.write_i2c_block_data(self._ADDRESS, register, res) # Need to write byte by byte
+    def write(self, value): 
+        write = i2c_msg.write(self._ADDRESS, value)
+        self.device.i2c_rdwr(write)
+        sleep(0.1)
     
     # Read bytes (default 1 byte)
-    # TODO: Read 3 bytes to check CRC (LSB would be error parity bit)
-    def read(self, register, bytes=1):
-        res = 0
-        if bytes == 1:
-            res = self.device.read_byte_data(self._ADDRESS, 0)
-        else:
-            # print("    Reading register " + hex(register))
-            block = self.device.read_i2c_block_data(self._ADDRESS, register, bytes)
-            print("    Block of bytes" + str(block))
-            for i in range(bytes):        
-                byte = block[i]
-                print("    " + hex(byte))
-                res = res | (byte  << (bytes-i-1)*8) ;
-        return res
-    
-    def read_userreg(self):
-        msg = self.read(self._READ_USER_REG,2)
-        print("User register data")
-        print(msg)
-
-    def read_heaterreg(self):
-        msg = self.read(self._READ_HEATER_REG,2)
-        print("Heater register data")
-        print(msg)
-
-    def reset(self):
-        self.write(self._RESET, 0x1, 1)
-        print("Device Reset!")
-    
-    def check_device(self):
-        print("Read electronic ID 1st byte")
-        write = i2c_msg.write(self._ADDRESS, [0XFA, 0x0F])
-        read = i2c_msg.read(self._ADDRESS, 8)
-        self.device.i2c_rdwr(write, read)
-        sleep(0.5)
-        print(write)
-        print(read)
-
-        print("Read electronic ID 2nd byte")
-        write = i2c_msg.write(self._ADDRESS, [0XFC, 0xC9])
-        read = i2c_msg.read(self._ADDRESS, 6)
-        self.device.i2c_rdwr(write, read)
-        sleep(0.5)
-        print(write)
-        print(read)
-
-        print("Read Firmware Revision")
-        write = i2c_msg.write(self._ADDRESS, [0x84, 0xB8])
-        read = i2c_msg.read(self._ADDRESS, 8)
-        self.device.i2c_rdwr(write, read)
-        sleep(0.5)
-        print(write)
-        print(read)
-
-        print("    Checking Device ID 1 ")
-        # self.device.write_i2c_block_data(self._ADDRESS, [0xFA, 0x0F], )
+    def read(self, cmd, bytes):
+        write = i2c_msg.write(self._ADDRESS, cmd)
+        self.device.i2c_rdwr(write)
         sleep(0.1)
-        res = self.read(0xFA, 8)
-        sleep(0.5)
-        res_2 = self.read(0x0F, 8)
-        print(res)
-        print(res_2)
+        read = i2c_msg.read(self._ADDRESS, bytes)
+        self.device.i2c_rdwr(read)
+        return list(read)
 
-        # print("    Checking Device ID 2 ")
-        # self.device.write_i2c_block_data(self._ADDRESS, 0x00, [0XFC, 0xC9])
-        # sleep(0.1)
-        # res = self.read(0,6)
-        # print(res)
-
-        # print("    Checking Device ID 2 ")
-        # self.write(0x00, self._ID2_CMD, 2)
-        # sleep(0.1)
-        # res = self.read(0,6)
-        # print(res)
-        # print("    Firmware Rev ")
-        # res = self.read(self._FIRMWARE_REV,1)
-        # print(res)
-    
     def collect_readings(self):
-        humidity_raw = self.read(self._READ_HUMIDITY, 2)
-        sleep(0.1)
+        humidity_bytes = self.read(self._READ_HUMIDITY, 2)
+        humidity_raw = self.bytes_to_int(humidity_bytes)
+        # lsb = int.from_bytes(humidity_bytes[1], 'big')
+        # checksum = int.from_bytes(humidity_bytes[2],'big')
+        # print("[Si7021] checksum and lsb: " + hex(checksum) + ", " + hex(lsb))
 
-        temp_raw = self.read(self._READ_PREV_TEMP, 2)
-        sleep(0.1)
+        temp_bytes = self.read(self._READ_PREV_TEMP, 2) # checksum is not necessary
+        temp_raw = self.bytes_to_int(temp_bytes)
 
         humidity = (humidity_raw * 125 / 65536.0) - 6
         temp = (temp_raw * 175.72 / 65536.0) - 46.85
 
-        print("{:.2f}".format(temp) + "°C, " + "{:.2f}".format(humidity) + "% ")
+        self.check_range(temp, humidity)
+        error = (self.RANGE_ERROR<<2) | (self.DEVICE_ERROR<<1) | (self.FIRMWARE_ERROR)
+        print("[Si7021] {:.2f}".format(temp) + "°C | " + "{:.2f}".format(humidity) + "%, error: " + bin(error))
+
+        return [humidity, temp, error]
+    
+    def check_range(self, temp, humidity):
+        if humidity > 80 or humidity < 0 or temp > 85 or temp < -10:
+            self.RANGE_ERROR = 0b1
+            print("[Si7021] ERROR: Readings out of range.")
+        else:
+            self.RANGE_ERROR = 0b0
 
 
-        return [humidity, temp]
+    def bytes_to_int(self, block):
+        length = len(block)
+        res = 0
+        for i in range(length):
+            byte = block[i]        
+            res = res | (byte  << (length-i-1)*8)
+        return res
 
+    def check_device(self):
+        print("[Si7021] Read electronic ID 1st byte")
+        ID_read1 = self.read(self._ID1_CMD,8)
+        # SNA3, CRC, SNA2, CRC, SNA1, CRC, SNA0, CRC
 
+        # Electronic ID
+        print("[Si7021] Read electronic ID 2nd byte")
+        ID_read2 = self.read(self._ID2_CMD,6)
+        device_id = ID_read2[0]
+        device = ""
+        if device_id == 0x15:
+            device = "Si7021"
+        else: 
+            self.DEVICE_ERROR = 0b1
+            print("[Si7021] ERROR: unexpected device")
+            if device_id == 0x00 or device_id == 0xFF:
+                device = "Engineering Sample"
+            if device_id == 0x0D:
+                device = "Si7013"
+            if device_id == 0x14:
+                device = "Si7020"
+        print("[Si7021] Device Identification: " + hex(device_id) + " (" + device + ")") # SNB3
+        # SNB3, SNB2, CRC, SNB1, SNB0, CRC
 
+        # Read Firmware Revision
+        msg = self.read(self._FIRMWARE_REV,1)
+        fw_ver = msg[0]
+        print()
+        if fw_ver == 255:
+            print("[Si7021] Firmware version: " + hex(fw_ver) + " (1.0)")        
+        elif fw_ver == 32:
+            print("[Si7021] Firmware version: " + hex(fw_ver) + " (2.0)")
+        else:
+            print("[Si7021] ERROR: Firmware version unknown")
+            self.FIRMWARE_ERROR = 0b1
 
+        # Measurement Settings
+        msg = self.read_userreg()
+        res = (msg>>7) | (msg&0b1)
+        res_text = ""
+        if res == 0:
+            res_text = "RH: 12bit, Temp: 14bit"
+        elif res == 1:
+            res_text = "RH: 08bit, Temp: 12bit"
+        elif res == 2:
+            res_text = "RH: 10bit, Temp: 13bit"
+        elif res == 3:
+            res_text = "RH: 11bit, Temp: 11bit"
+        print("[Si7021] Measurement Resolution Settings - " + res_text)
+
+        self.test_heater()
+
+    def read_userreg(self):
+        user_reg = self.read(self._READ_USER_REG, 1)
+        print("[Si7021] User register: " + bin(user_reg[0]))
+        sleep(0.1)
+        return user_reg[0]
+
+    def test_heater(self):
+        self.write(self._WRITE_USER_REG + self._HEATER_ON)
+        print("[Si7021] Test: is heater switched on?")
+        msg = self.read_userreg()
+        self.check_heater(msg)
+        self.read_heater_settings()
+        self.write(self._WRITE_USER_REG + self._HEATER_OFF)
+        print("[Si7021] Test: Is heater off?")
+        msg = self.read_userreg()
+        self.check_heater(msg)
+        self.read_heater_settings()
+
+    def check_heater(self, user_reg):
+        heater_bit = (user_reg >> 2) & 0b1
+        if heater_bit == 0:
+            print("[Si7021] Heater Disabled")
+        elif heater_bit == 1:
+            print("[Si7021] Heater Enabled")
+    
+    def read_heater_settings(self):
+        msg = self.read(self._READ_HEATER_REG, 1)
+        setting = msg[0]
+        current_draw = ""
+        if setting == 0:
+           current_draw = 3.09
+        elif setting == 1:
+            current_draw = 9.18
+        elif setting == 2:
+            current_draw = 15.24
+        elif setting == 4:
+            current_draw = 27.39
+        elif setting == 8:
+            current_draw = 51.69
+        elif setting == 15:
+            current_draw = 94.2
+        print("[Si7021] Heater current draw: " + str(current_draw) + "mA")

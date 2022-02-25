@@ -29,44 +29,63 @@ class AirQuality:
     _HW_VERSION_VAL = 0x10
     #_BOOT_SEQUENCE_VAL = [0x11, 0xE5, 0x72, 0x8A]
 
+    RANGE_ERROR = 0b0
+    HW_ERROR = 0b0
+    I2C_ERROR = 0b0
+    FW_ERROR = 0b0
+
     # Initialize the Air Quality Sensor
     def __init__(self):
         # Check Versions
         HW_ID_VAL = self.device.read_byte_data(self._ADDRESS, self._HW_ID)
-        assert (HW_ID_VAL == self._HW_ID_VAL), "HW_ID is incorrect!"
         sleep(0.01)
         HW_VERSION_VAL = self.device.read_byte_data(self._ADDRESS, self._HW_VERSION)
         HW_VERSION_VAL &= 0xF0
-        assert (HW_VERSION_VAL == self._HW_VERSION_VAL), "HW_VERSION is incorrect!"
         sleep(0.01)
-        print("Device versions are correct.")
+
+        if (HW_VERSION_VAL == self._HW_VERSION_VAL) and (HW_ID_VAL == self._HW_ID_VAL):
+            print("[CCS811] Device versions correct.")
+            self.HW_ERROR = 0b0
+        else:
+            self.HW_ERROR = 0b1
+            if not (HW_ID_VAL == self._HW_ID_VAL):
+                print("[CCS811] ERROR: HW_ID is incorrect!")
+            if not (HW_VERSION_VAL == self._HW_VERSION_VAL):
+                print("[CCS811] ERROR: HW_VERSION is incorrect!")
 
         # Checking if Device is Ready
         STATUS_VAL = self.device.read_byte_data(self._ADDRESS, self._STATUS)
         self.load_firmware(STATUS_VAL)
 
         # self.read_gas_amounts()
-        self.start_measurements() #TODO: Is this valid?
+        self.start_measurements()
 
     def load_firmware(self, current_status):
-        assert ((current_status & 0b00000001) == 0b00000000), "There is an error on the I²C or sensor!"
-        assert (current_status & 0b00010000 == 0b00010000), "No valid firmware application is loaded!"
+        if not ((current_status & 0b00000001) == 0b00000000):
+            print("[CCS811] ERROR: There is an error on the I²C or sensor!")
+            self.I2C_ERROR = 0b1
+        if not (current_status & 0b00010000 == 0b00010000):
+            print("[CCS811] ERROR: No valid firmware application is loaded!")
+            self.FW_ERROR = 0b1
+            
+
         if (current_status & 0b10010001 == 0b00010000):
-            print("Loading firmware...")
+            print("[CCS811] Loading firmware...")
             self.device.write_byte(self._ADDRESS, self._APP_START)
             sleep(0.01)
             current_status = self.device.read_byte_data(self._ADDRESS, self._STATUS)
             sleep(0.01)
         if(current_status & 0b10010001 == 0b10010000):
-            print("Firmware is loaded.")
+            print("[CCS811] Firmware is loaded.")
+            self.FW_ERROR = 0b0
+            self.I2C_ERROR = 0b0
         sleep(0.01)
 
     def read_gas_amounts(self):
-        print("Activating Measurements...")
+        print("[CCS811] Activating Measurements...")
         self.device.write_byte_data(self._ADDRESS, self._MEAS_MODE, 0b00010000)
-        print("Measurements Activated.")
-        print("________________________")
-        print("Upper value is Co2, Lower two Bytes is TVOC.")
+        print("[CCS811] Measurements Activated.")
+        print("[CCS811] Upper value is Co2, Lower two Bytes is TVOC.")
         sleep(4)
         file = open("gasdata.txt", "a")
         time = 0
@@ -80,9 +99,9 @@ class AirQuality:
             time += 1
 
     def start_measurements(self):
-        print("Activating Measurements...")
+        print("[CCS811] Activating Measurements...")
         self.device.write_byte_data(self._ADDRESS, self._MEAS_MODE, 0b00010000)
-        print("Measurements Activated.")
+        print("[CCS811] Measurements Activated.")
         sleep(4)
 
     # MUST RUN start_measurements() before getting gas amounts
@@ -90,7 +109,11 @@ class AirQuality:
         Alg_data = self.device.read_i2c_block_data(self._ADDRESS, self._ALG_RESULT_DATA, 4)
         Co2_data = Alg_data[0]*16+Alg_data[1]
         Voc_data = Alg_data[2]*16+Alg_data[3]
-        return [Co2_data,Voc_data]
+
+        error = (self.RANGE_ERROR<<3) | (self.HW_ERROR << 2) | (self.I2C_ERROR<<1) | (self.FW_ERROR)
+        print("[CCS811] {:.2f}".format(Co2_data) + ", " + "{:.2f}".format(Voc_data) + ", error: " + bin(error))
+
+        return [Co2_data,Voc_data, error]
 
 def main():
     AirQuality()

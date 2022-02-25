@@ -94,128 +94,60 @@ class Infrared:
     _DEV_REG = 0xFF
     _DEV_ID = 0x67
 
+    DEVICE_ERROR = 0b0
+    OPERATION_ERROR = 0b0
+    RANGE_ERROR = 0b0
+
     # Constructor to define class members/ attributes. Default to 1 conversions per second, with 4 samples in total.
     def __init__(self, address=_ADDRESS, op_mode=0b111, adc_rate=0b100, drdyen=0b1):
         self._ADDRESS = address
         self.device = smbus2.SMBus(1)
         # self.device.pec = 1 # Enable packet error checking (currently disabled)
-        print("----------------------")
-        print("Begin Initialisation")
+        print("[TMP006] Begin Initialisation")
         self.reset()
         self.check_ID()
         self.config(op_mode, adc_rate, drdyen) # Dont need to enable DRDY
-        print("Initialisation Complete")
+        print("[TMP006] Initialisation Complete")
         
     # Write two bytes with 0 offset
     def write(self, register, value):
-        # print("    Writing to register " + hex(register) + " with value " + hex(value))
+        # print("[TMP006]     Writing to register " + hex(register) + " with value " + hex(value))
         msb = (value >> 8) & 0xFF
         lsb = value & 0xFF
-        # print("    Value bytes (msb, lsb): " + hex(msb) + " , " + hex(lsb))
+        # print("[TMP006]     Value bytes (msb, lsb): " + hex(msb) + " , " + hex(lsb))
         self.device.write_i2c_block_data(self._ADDRESS, register, [msb, lsb]) # Need to write byte by byte
     
     # Read 2 byte with 0 offset
     def read(self, register):
-        # print("    Reading register " + hex(register))
+        # print("[TMP006]     Reading register " + hex(register))
         block = self.device.read_i2c_block_data(self._ADDRESS, register, 2)
-        # print("    Block of bytes" + str(block))
+        # print("[TMP006]     Block of bytes" + str(block))
         msb = block[0]
         lsb = block[1]
         res = (msb  << 8) | lsb ;
-        return res
-    
-    def reset(self):
-        self.write(self._CONFIG_REG, self._RESET) # Reset device and initialise memory
-        sleep(1)
-        print("Reset success")
-    
-    def check_ID(self):
-        # Check Manufacturer ID
-        res = self.read(self._M_REG)
-        print("Checking Manufacturer and Device ID")
-        print(" Manufacturer ID: " + hex(res))
-        if res != self._M_ID:
-            raise RuntimeError("    Not correct manufacturer ID")
-
-        # Check Device ID
-        res = self.read(self._DEV_REG)
-        print(" Device ID: " + hex(res))
-        if res != self._DEV_ID:
-            raise RuntimeError("    Not correct manufacturer ID")
-
-        print(" Manufacturer and Device ID matches expected value")
-    
-    # Configure device. Superposition configuration codes with a | operator.
-    def config(self, op_mode, adc_rate, drdyen):
-        op_mode_aligned = op_mode << 12
-        adc_rate_aligned = adc_rate << 9
-        drdyen_align = drdyen << 8
-        if op_mode_aligned not in (self._MODEON, self._MODEOFF):
-            raise ValueError("Operation maode must be 0b111 (Continuous conversion mode) or 0b000 (Shutdown)")
-        if adc_rate_aligned not in (self._ADC_1, self._ADC_2, self._ADC_4, self._ADC_8, self._ADC_16):
-            raise ValueError("ADC rate must be one of 0b000 (4 conv/s), 0b001 (2 conv/s), 0b010 (1 conv/s), 0b011 (0.5 conv/s), 0b100 (0.25 conv/s)")
-        if drdyen_align not in (self._EN_DRDY, self._DIS_DRDY):
-            raise ValueError("Data ready bit enable must 1 (enable) or 0 (disable)")
-            
-        config_cmd = op_mode_aligned | adc_rate_aligned | drdyen_align
-        self.write(self._CONFIG_REG, config_cmd)
-        sleep(1)        
-
-    def print_config(self):
-        config = self.read(self._CONFIG_REG)
-        print("----------------------")
-        print("DEBUG: Printing config")
-        rst = config >> 15
-        op_mode = (config >> 12 ) & 0b111
-        adc_rate = (config >> 9) & 0b111
-        drdy_en = (config >> 8) & 0b1
-        drdy_bit = (config >> 7) & 0b1
-        print(" Confiured to " + hex(config))
-        print(" RST = " + str(hex(rst)))
-        print(" MOD[2:0] = " + str(bin(op_mode)))
-        print(" ADC_CR[2:0] = " + str(bin(adc_rate)))
-        print(" DRDY_ENABLE = " + str(hex(drdy_en)))
-        print(" DRDY_BIT = " + str(hex(drdy_bit)))
-
-    def set_active(self, set):
-        status = self.read(self._CONFIG_REG)
-        cmd = None
-        print("----------------------")
-        if set:
-            cmd = status | self._MODEON # Set to active
-            print("NOTE: Device set to active")
-        else:
-            cmd = status & ~(self._MODEON) # Set to power off
-            print("NOTE: Device powered off")
-        self.write(self._CONFIG_REG, cmd)
-
-    def is_active(self):
-        msg = self.read(self._CONFIG_REG)
-        res = (msg & 0b0111000000000000) == self._MODEON # Bitwise operator: Checks if operation mode bit in config reg is 1.
-        if res:
-            print("Device is active")
-        else:
-            print("Device is not active")    
-        return res
-
-    def is_ready(self):
-        msg = self.read(self._CONFIG_REG)
-        res = (msg & 0b0000000010000000) == self._DRDY_BIT # Bitwise operator: Checks if _DRDY bit in config reg is 1.
-        if res:
-            print("Device is ready")
-        else:
-            print("Conversion in progress or data ready pin not enabled.")  
         return res
 
     def collect_readings(self):
         sleep(0.1)
         temp = self.read_temp()
         voltage = self.read_voltage()
-        # print("----------------------")
-        # print("Collecting Readings")
-        # print(" Temperature: " + str(temp))
-        # print(" Voltage: " + str(voltage))
-        return [temp,voltage]
+
+        self.check_readings(temp)
+        error = (self.RANGE_ERROR<<2) | (self.DEVICE_ERROR<<1) | (self.OPERATION_ERROR)
+        print("[TMP006] {:.2f}".format(temp) + "°C, " + "{:.2f}".format(voltage) + "V, error: " + bin(error))
+        return [temp,voltage, error]
+    
+    def check_readings(self,temp):
+        if not self.is_active():
+            self.OPERATION_ERROR = 0b1
+            self.RANGE_ERROR = 0b1
+        else:
+            self.OPERATION_ERROR = 0b0
+            if temp > 125 or temp < -40:
+                self.RANGE_ERROR = 0b1
+                print("[TMP006] ERROR: Readings out of range.")
+            else:
+                self.RANGE_ERROR = 0b0
 
     def read_temp(self):
         raw = self.read(self._TEMP_REG)
@@ -231,6 +163,96 @@ class Infrared:
         msg = self.read(self._VOLTAGE_REG)
         voltage = msg * 156.25e-9
         return voltage
+    
+    def reset(self):
+        self.write(self._CONFIG_REG, self._RESET) # Reset device and initialise memory
+        self.DEVICE_ERROR = 0b0
+        self.RANGE_ERROR = 0b0
+        self.OPERATION_ERROR = 0b0
+        sleep(1)
+        print("[TMP006] Reset success")
+    
+    def check_ID(self):
+        # Check Manufacturer ID
+        manufacturer = self.read(self._M_REG)
+        print("[TMP006] Manufacturer ID: " + hex(manufacturer))
+
+        # Check Device ID
+        dev_id = self.read(self._DEV_REG)
+        print("[TMP006] Device ID: " + hex(dev_id))
+
+        if dev_id != self._DEV_ID or manufacturer != self._M_ID:
+            print("[TMP006] ERROR: Manufacturer or Device ID incorrect. Expected " + hex(self._M_ID) + " and " + hex(self._DEV_ID))
+            self.DEVICE_ERROR = 0b1
+    
+    # Configure device. Superposition configuration codes with a | operator.
+    def config(self, op_mode, adc_rate, drdyen):
+        op_mode_aligned = op_mode << 12
+        adc_rate_aligned = adc_rate << 9
+        drdyen_align = drdyen << 8
+
+        op_mode_error = op_mode_aligned not in (self._MODEON, self._MODEOFF)
+        adc_rate_error = adc_rate_aligned not in (self._ADC_1, self._ADC_2, self._ADC_4, self._ADC_8, self._ADC_16)
+        drdy_error = drdyen_align not in (self._EN_DRDY, self._DIS_DRDY)
+
+        if op_mode_error or adc_rate_error or drdy_error:
+            self.OPERATION_ERROR = 0b1
+            print("[TMP006] ERROR: Configuration error")
+            if op_mode_error:
+                print("[TMP006] ERROR: Operation maode must be 0b111 (Continuous conversion mode) or 0b000 (Shutdown)")
+            if adc_rate_error:
+                print("[TMP006] ERROR: ADC rate must be one of 0b000 (4 conv/s), 0b001 (2 conv/s), 0b010 (1 conv/s), 0b011 (0.5 conv/s), 0b100 (0.25 conv/s)")
+            if drdy_error:
+                print("[TMP006] ERROR: Data ready bit enable must 1 (enable) or 0 (disable)")
+        else:
+            self.OPERATION_ERROR = 0b0
+            config_cmd = op_mode_aligned | adc_rate_aligned | drdyen_align
+            self.write(self._CONFIG_REG, config_cmd)
+            sleep(1)        
+
+    def print_config(self):
+        config = self.read(self._CONFIG_REG)
+        print("[TMP006] Printing config")
+        rst = config >> 15
+        op_mode = (config >> 12 ) & 0b111
+        adc_rate = (config >> 9) & 0b111
+        drdy_en = (config >> 8) & 0b1
+        drdy_bit = (config >> 7) & 0b1
+        print("[TMP006]  Confiuration register: " + hex(config))
+        print("[TMP006]  RST = " + str(hex(rst)))
+        print("[TMP006]  MOD[2:0] = " + str(bin(op_mode)))
+        print("[TMP006]  ADC_CR[2:0] = " + str(bin(adc_rate)))
+        print("[TMP006]  DRDY_ENABLE = " + str(hex(drdy_en)))
+        print("[TMP006]  DRDY_BIT = " + str(hex(drdy_bit)))
+
+    def set_active(self, set):
+        status = self.read(self._CONFIG_REG)
+        cmd = None
+        if set:
+            cmd = status | self._MODEON # Set to active
+            print("[TMP006] NOTE: Device set to active")
+        else:
+            cmd = status & ~(self._MODEON) # Set to power off
+            print("[TMP006] NOTE: Device powered off")
+        self.write(self._CONFIG_REG, cmd)
+
+    def is_active(self):
+        msg = self.read(self._CONFIG_REG)
+        res = (msg & 0b0111000000000000) == self._MODEON # Bitwise operator: Checks if operation mode bit in config reg is 1.
+        if res:
+            pass
+        else:
+            print("[TMP006] Device is not active")    
+        return res
+
+    def is_ready(self):
+        msg = self.read(self._CONFIG_REG)
+        res = (msg & 0b0000000010000000) == self._DRDY_BIT # Bitwise operator: Checks if _DRDY bit in config reg is 1.
+        if res:
+            print("[TMP006] Device is ready")
+        else:
+            print("[TMP006] Conversion in progress or data ready pin not enabled.")  
+        return res
     
     def process_temp(self):
         # If we want to deal with calibration, then we will need to implement a bunch of parameters here

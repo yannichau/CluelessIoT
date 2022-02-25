@@ -23,4 +23,6 @@ ready = device.is_ready()
 
 device.print_config()
 
-[temp, voltage] = device.collect_readings()
+while True:
+    [temp, voltage, error] = device.collect_readings()
+    sleep(0.1)
