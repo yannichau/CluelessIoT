@@ -50,8 +50,8 @@ class Imfresh():
 
     def load_config(self):
     # Load configuration from config.yaml
-        with open('config.yaml') as f:
-            config = yaml.load(f, Loader = yaml.FullLoader)
+        with open('config.yaml', 'r') as file:
+            config = yaml.safe_load(file)
             self.id = config["deviceId"] # string
             self.device_name = config["deviceName"] # string
             self.alarm_status = config["alarmStatus"] # bool
@@ -65,8 +65,8 @@ class Imfresh():
 
     def save_config(self):
     # Save configuration to config.yaml
-        with open('config.yaml') as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
+        with open('config.yaml', 'w') as file:
+            config = {}
             config["deviceId"] = self.id # string
             config["deviceName"] = self.device_name # string
             config["alarmStatus"] = self.alarm_status # bool
@@ -77,6 +77,7 @@ class Imfresh():
             config["periodicMeasurementTimePeriod"] = self.measurement_interval # int
             config["periodicMeasurementTimes"] = [time.isoformat() for time in self.measurement_times] # list of strings
             config["washDay"] = self.wash_day.isoformat() # string
+            yaml.dump(config, file)
 
     def record_data(self, voc, humidity, temperature, time, type):
     # Record data to database
