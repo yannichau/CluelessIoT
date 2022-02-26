@@ -93,7 +93,7 @@ class Imfresh():
         voc = 0
         humidity = 0
         temperature = 0
-        temp_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ?", (type_data))
+        temp_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ?", (type_data,)).fetchall()
         if len(temp_data) == 0:
             self.data_con.close()
         else:
@@ -104,7 +104,7 @@ class Imfresh():
             voc = voc / len(temp_data)
             humidity = humidity / len(temp_data)
             temperature = temperature / len(temp_data)
-            data_cursor.execute("DELETE FROM ImFreshData WHERE type = ?", (type_data))
+            data_cursor.execute("DELETE FROM ImFreshData WHERE type = ?", (type_data,))
             self.data_con.commit()
             self.data_con.close()
         return (voc, humidity, temperature)
@@ -159,7 +159,7 @@ class Imfresh():
         data_message = {
             "type": type_data,
             "timestamp": timestamp,
-            "nextWash": self.next_wash.isoformat(),
+            "nextWash": self.wash_day.isoformat(),
             "deviceId": self.id,
             "humidity": humidity,
             "temperature": temperature,
@@ -200,9 +200,8 @@ class Imfresh():
         self.client.on_message = self.mqtt_on_message
         self.client.username_pw_set(username="cluelessIoT",password="Imfresh")
         self.client.connect(self.IP_ADDRESS, self.PORT)
-        self.client.subscribe(self.id + "/settings")
         self.client.loop_start()
-        pass
+        self.client.subscribe(self.id + "/settings")
                     
     def activate(self):
     # Activate main loop for device
