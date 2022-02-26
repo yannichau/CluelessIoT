@@ -28,7 +28,7 @@ class Imfresh():
         self.measurement_times = []
         self.cleanliness_threshold = 1
         # Other Variables
-        self.wash_day = datetime.fromisoformat('2022-02-30T12:00:00').date
+        self.wash_day = datetime.fromisoformat('2022-02-28T12:00:00').date
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
         # Load current settings from config.yaml
