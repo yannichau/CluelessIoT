@@ -42,8 +42,8 @@ class Imfresh():
         self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
         data_cursor.execute("CREATE TABLE IF NOT EXISTS ImFreshData (time TIME, voc REAL, humidity REAL, temperature REAL, type TEXT)")
-        data_cursor.commit()
-        data_cursor.close()
+        self.data_con.commit()
+        self.data_con.close()
 
         # Activate main loop for device
         # self.activate()
@@ -82,20 +82,22 @@ class Imfresh():
     def record_data(self, voc, humidity, temperature, time, type):
     # Record data to database
         current_stamp = time.isoformat()
+        self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
         data_cursor.execute("INSERT INTO ImFreshData VALUES(?, ?, ?, ?, ?, ?)", (current_stamp, voc, humidity, temperature, type))
-        data_cursor.commit()
-        data_cursor.close()
+        self.data_con.commit()
+        self.data_con.close()
 
     def average_data(self, type):
     # Calculate average data from temporary database values
+        self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
         voc = 0
         humidity = 0
         temperature = 0
         temp_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ?", (type))
         if len(temp_data) == 0:
-            data_cursor.close()
+            self.data_con.close()
         else:
             for row in temp_data:
                 voc += row[1]
@@ -105,8 +107,8 @@ class Imfresh():
             humidity = humidity / len(temp_data)
             temperature = temperature / len(temp_data)
             data_cursor.execute("DELETE FROM ImFreshData WHERE type = ?", (type))
-            data_cursor.commit()
-            data_cursor.close()
+            self.data_con.commit()
+            self.data_con.close()
         return (voc, humidity, temperature)
 
     def periodic(self):
