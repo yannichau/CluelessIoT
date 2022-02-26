@@ -115,7 +115,7 @@ class Imfresh():
             if datetime.now() > self.next_time + timedelta(hours=self.measurement_interval):
                 no_time_available = True
                 for new_time in self.measurement_times:
-                    if datetime.now() < new_time:
+                    if datetime.now() < new_time + timedelta(hours=self.measurement_interval):
                         self.prev_time = self.next_time
                         self.next_time = new_time
                         no_time_available = False
@@ -125,9 +125,12 @@ class Imfresh():
             elif datetime.now() > self.next_time - timedelta(minutes=20) and datetime.now() < self.next_time:
                 self.sensor_library.collect_data()
             elif datetime.now() > self.next_time and datetime.now() < self.next_time + timedelta(hours=self.measurement_interval):
-                (voc, dc1, humidity, temperature, errval) = self.sensor_library.collect_data()
-                voc = 50 if voc > 50 else voc
-                self.record_data(voc, humidity, temperature, datetime.now(), "PeriodicTemp")
+                (dc1, voc, dc2, humidity, temperature, errval) = self.sensor_library.collect_data()
+                if(errval == 0):
+                    voc = 50 if voc > 50 else voc
+                    self.record_data(voc, humidity, temperature, datetime.now(), "PeriodicTemp")
+                else:
+                    print("Error: " + str(errval))
             else:
                 voc_avg, humidity_avg, temperature_avg = self.average_data("PeriodicTemp")
                 if(voc_avg or humidity_avg or temperature_avg):
@@ -142,10 +145,13 @@ class Imfresh():
                 datapoint = 0
                 voc_avg, humidity_avg, temperature_avg = self.average_data("RealTimeTemp")
                 # TODO: Use MQTT to send realtime data to the server
-            (voc, humidity, temperature) = self.sensor_library.collect_data()
+            (dc1, voc, dc2, humidity, temperature, errval) = self.sensor_library.collect_data()
             sleep(1)
-            self.record_data(voc, humidity, temperature, datetime.now(), "RealTimeTemp")
-            datapoint += 1
+            if(errval == 0):
+                self.record_data(voc, humidity, temperature, datetime.now(), "RealTimeTemp")
+                datapoint += 1
+            else:
+                print("Error: " + str(errval))
         self.measuring_real_time = False
 
     def mqtt_on_connect(client, userdata, flags, rc):
