@@ -15,9 +15,11 @@ class DatabaseHandler {
     String path = join(databasesPath, "database.db");
     return openDatabase(
       path,
-      onCreate: (db, version) => db.execute(
-        'CREATE TABLE periodicReadings(timestamp TEXT PRIMARY KEY, deviceID TEXT, nextWash TEXT, humidity REAL, temperature REAL, airQuality REAL, cleanlinessScore INTEGER)',
-      ),
+      onCreate: (db, version) {
+        db.execute(
+          'CREATE TABLE periodicReadings(timestamp TEXT PRIMARY KEY, deviceID TEXT, nextWash TEXT, humidity REAL, temperature REAL, airQuality REAL, cleanlinessScore INTEGER)',
+        );
+      },
       version: 1,
     );
   }
@@ -41,7 +43,7 @@ class DatabaseHandler {
     return result;
   }
 
-  Future<List<PeriodicReading>> getSermons() async {
+  Future<List<PeriodicReading>> getReadings() async {
     final Database db = await openDB();
     final List<Map<String, Object?>> queryResult =
         await db.query('periodicReadings', orderBy: "date DESC");

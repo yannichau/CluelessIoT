@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imfresh/models/settings.dart';
+import 'package:imfresh/services/shared_prefs_handler.dart';
 
 class DeviceSettingsCard extends StatefulWidget {
   final Settings initalSettings;
@@ -227,7 +228,7 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
 
   @override
   void dispose() {
-    print(_settings.toJson());
+    updateDeviceSettings(widget.initalSettings.deviceId, _settings);
     super.dispose();
   }
 

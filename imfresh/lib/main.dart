@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hive/hive.dart';
 import 'package:imfresh/features/home_page.dart';
 import 'package:imfresh/features/new_device.dart';
 import 'package:imfresh/services/databaseHandler.dart';
@@ -11,7 +9,6 @@ import 'features/settings_view.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   dbHandler.openDB();
-  Hive.initFlutter();
   runApp(const App());
 }
 
