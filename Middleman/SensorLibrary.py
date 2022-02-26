@@ -30,9 +30,9 @@ class Middleman:
     def collect_data(self):
         [co2, voc, aq_error] = self.AQ_device.get_gas_amounts()
         [temp, voltage, temp_error] = self.IR_device.collect_readings()
-        [humidity, ambient_temp, ir_error] = self.RH_device.collect_readings()
+        [humidity, ambient_temp, humidity_error] = self.RH_device.collect_readings()
 
-        error = (aq_error<<6) | (temp_error<<3) | (ir_error)
+        error = (aq_error<<6) | (temp_error<<3) | (humidity_error)
         return (co2, voc, temp, humidity, ambient_temp, error)
 
 # For testing only
