@@ -1,5 +1,5 @@
 from time import sleep
-from CluelessIoT.Sensors.SensorLibrary import SensorLibrary
+from Middleman.SensorLibrary import Middleman
 import paho.mqtt.client as mqtt
 from datetime import datetime
 import sqlite3
@@ -19,18 +19,20 @@ class Imfresh():
         self.measurement_interval = 60
         self.cleanliness_threshold = 1
         self.alarm_status = True
-        self.alarm_time = datetime.time.fromisoformat('12:00:00')
-        self.wash_day = datetime.date.fromisoformat('2022-2-30')
+        self.alarm_time = datetime.fromisoformat('12:00:00')
+        self.wash_day = datetime.fromisoformat('2022-02-30')
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.do_real_time = False
         self.measuring_real_time = False
         self.do_periodic = True
         self.measuring_periodic = False
+
         # Load current settings from config.yaml
+        self.save_config()
         self.load_config()
         # Initialise library
-        self.sensor_library = SensorLibrary()
+        self.sensor_library = Middleman()
         # Initialise MQTT Client
         self.client = mqtt.Client("", True, None, mqtt.MQTTv31)
         # Initialise database
@@ -39,8 +41,9 @@ class Imfresh():
         data_cursor.execute("CREATE TABLE IF NOT EXISTS ImFreshData (time TIME, voc REAL, humidity REAL, temperature REAL, type TEXT)")
         data_cursor.commit()
         data_cursor.close()
+
         # Activate main loop for device
-        self.activate()
+        # self.activate()
 
     def load_config(self):
     # Load configuration from config.yaml
