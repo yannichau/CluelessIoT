@@ -154,21 +154,30 @@ class Imfresh():
                 print("Error: " + str(errval))
         self.measuring_real_time = False
 
-    def mqtt_on_connect(client, userdata, flags, rc):
-        # Callback for when the client connects to the broker
+    def mqtt_on_connect(self, client, userdata, flags, rc):
+    # Callback for when the client connects to the broker
         if rc == 0:
             client.connected_flag = True #set flag
             print("Connected OK Returned code = ",rc)
         else:
             print("Bad connection Returned code = ",rc)
 
-    def mqtt_on_message(client, userdata, message) :
+    def mqtt_on_message(self, client, userdata, message) :
     # Callback for when a message is received
-        m_decode=str(message.payload.decode("utf-8","ignore"))
+        m_decode = str(message.payload.decode("utf-8","ignore"))
         try:
-            m_in=json.loads(m_decode) #decode json data
-            print("Received {} message on topic {}".format(m_in["type"], message.topic))
-            # TODO: Save settings received on device
+            m_in = json.loads(m_decode)
+            self.id = m_in["deviceId"]
+            self.device_name = m_in["deviceName"]
+            self.alarm_status = m_in["alarmOn"]
+            self.alarm_time = datetime.fromisoformat(m_in["alarmTime"])
+            self.device_location = m_in["deviceLocation"]
+            self.do_real_time = m_in["realtimeMeasuringOn"]
+            self.do_periodic = m_in["periodicMeasuringEnabled"]
+            self.measurement_interval = m_in["periodicMeasuringTimePeriod"]
+            self.measurement_times = [datetime.fromisoformat(time) for time in m_in["measuringTimes"]]
+            self.cleanliness_threshold = m_in["cleanlinessThreshold"]
+            self.save_config()
         except ValueError:
             print("The message was not a valid JSON")
         
@@ -178,7 +187,7 @@ class Imfresh():
         self.client.on_message = self.mqtt_on_message
         self.client.username_pw_set(username="cluelessIoT",password="Imfresh")
         self.client.connect(self.IP_ADDRESS, self.PORT)
-        self.client.subscribe(["IC.embedded/cluelessIoT"])
+        self.client.subscribe(self.id + "/settings")
         self.client.loop_start()
         pass
                     
