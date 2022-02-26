@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:imfresh/models/periodic_reading.dart';
 import 'package:imfresh/models/settings.dart';
+import 'package:imfresh/services/weather_handler.dart';
 import 'package:intl/intl.dart';
 import 'package:weather/weather.dart';
 
@@ -26,6 +28,15 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
   late AnimationController _animationController;
   late Animation _animation;
   WeatherFactory wf = WeatherFactory("5017664c335a080c262ee52428445459");
+
+  final List<int> testWeatherStatus = [500, 731, 804, 903, 321];
+  final List<DateTime> testWeatherTimestamps = [
+    DateTime.now().add(Duration(days: 1)),
+    DateTime.now().add(Duration(days: 2)),
+    DateTime.now().add(Duration(days: 3)),
+    DateTime.now().add(Duration(days: 4)),
+    DateTime.now().add(Duration(days: 5)),
+  ];
 
   @override
   void initState() {
@@ -57,11 +68,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     widget.settings.deviceName,
-                    style: const TextStyle(
-                      fontSize: 28.0,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: GoogleFonts.racingSansOne(fontSize: 28.0),
                   ),
                 ),
               ),
@@ -154,12 +161,37 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
               Expanded(
                 child: TextButton(
                     child: const Text(
-                      "Done Washing!",
+                      "I'm Done Washing!",
                       textAlign: TextAlign.center,
                     ),
                     onPressed: () {}),
               ),
             ],
+          ),
+          Container(
+            padding: EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+            height: 90,
+            child: ListView.builder(
+              shrinkWrap: true,
+              scrollDirection: Axis.horizontal,
+              itemCount: testWeatherStatus.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  padding: EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+                  child: Column(
+                    children: [
+                      Icon(
+                        iconMapping[testWeatherStatus[index]],
+                        size: 50,
+                      ),
+                      Spacer(),
+                      Text(DateFormat(' EE')
+                          .format(testWeatherTimestamps[index])),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
           // FutureBuilder(
           //   future: wf.fiveDayForecastByCityName(

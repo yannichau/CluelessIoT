@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imfresh/services/shared_prefs_handler.dart';
+import 'package:imfresh/services/utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/settings.dart';
 import 'home_device_card.dart';
@@ -13,16 +15,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final Settings _settings = Settings(
-      deviceId: "askdfjhdsklfhjkjasdhfjlsk",
-      deviceName: "Bed 1",
-      deviceLocation: "London",
-      alarmOn: true,
-      alarmTime: DateTime.now(),
-      realtimeMeasuringOn: true,
-      periodicMeasuringEnabled: false,
-      cleanlinessThreshold: 3);
-
   @override
   void initState() {
     test();
@@ -30,8 +22,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void test() async {
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // await prefs.remove('deviceList');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('deviceList');
     print((await getDeviceList()).toString());
   }
 
@@ -108,7 +100,7 @@ class _HomePageState extends State<HomePage> {
           // Navigator.pushNamed(context, '/addDevice');
           print("Adding new device");
           addNewDevice(Settings(
-              deviceId: "askdfjhdsklfhjkjasdhfjlsk",
+              deviceId: getRandomString(32),
               deviceName: "Bed 1",
               deviceLocation: "London",
               alarmOn: true,

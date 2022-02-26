@@ -50,43 +50,44 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
               icon: const Icon(Icons.edit),
               onPressed: () {
                 showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('Device Location (closest city)'),
-                        content: TextField(
-                          onChanged: (value) {
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Device Location (closest city)'),
+                      content: TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            valueText = value;
+                          });
+                        },
+                        controller: _textFieldController
+                          ..text = _settings.deviceLocation,
+                        decoration: const InputDecoration(
+                            hintText: 'Enter closest city to device'),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('CANCEL'),
+                          onPressed: () {
                             setState(() {
-                              valueText = value;
+                              Navigator.pop(context);
                             });
                           },
-                          controller: _textFieldController
-                            ..text = _settings.deviceLocation,
-                          decoration: const InputDecoration(
-                              hintText: 'Enter closest city to device'),
                         ),
-                        actions: <Widget>[
-                          TextButton(
-                            child: const Text('CANCEL'),
-                            onPressed: () {
-                              setState(() {
-                                Navigator.pop(context);
-                              });
-                            },
-                          ),
-                          TextButton(
-                            child: const Text('OK'),
-                            onPressed: () {
-                              setState(() {
-                                _settings = _settings.copyWith(
-                                    deviceLocation: valueText);
-                                Navigator.pop(context);
-                              });
-                            },
-                          ),
-                        ],
-                      );
-                    });
+                        TextButton(
+                          child: const Text('OK'),
+                          onPressed: () {
+                            setState(() {
+                              _settings =
+                                  _settings.copyWith(deviceLocation: valueText);
+                              Navigator.pop(context);
+                            });
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
             ),
           ),
@@ -234,39 +235,40 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
 
   Future<void> _displayTextInputDialog(BuildContext context) async {
     return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Device Name'),
-            content: TextField(
-              onChanged: (value) {
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Device Name'),
+          content: TextField(
+            onChanged: (value) {
+              setState(() {
+                valueText = value;
+              });
+            },
+            controller: _textFieldController..text = _settings.deviceName,
+            decoration: const InputDecoration(hintText: 'Enter Device Name'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('CANCEL'),
+              onPressed: () {
                 setState(() {
-                  valueText = value;
+                  Navigator.pop(context);
                 });
               },
-              controller: _textFieldController..text = _settings.deviceName,
-              decoration: const InputDecoration(hintText: 'Enter Device Name'),
             ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('CANCEL'),
-                onPressed: () {
-                  setState(() {
-                    Navigator.pop(context);
-                  });
-                },
-              ),
-              TextButton(
-                child: const Text('OK'),
-                onPressed: () {
-                  setState(() {
-                    _settings = _settings.copyWith(deviceName: valueText);
-                    Navigator.pop(context);
-                  });
-                },
-              ),
-            ],
-          );
-        });
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                setState(() {
+                  _settings = _settings.copyWith(deviceName: valueText);
+                  Navigator.pop(context);
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

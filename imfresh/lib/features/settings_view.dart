@@ -76,12 +76,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 (BuildContext context, AsyncSnapshot<List<Settings>> snapshot) {
               if (snapshot.hasData) {
                 if (snapshot.data!.isEmpty) {
-                  return Padding(
-                    padding: EdgeInsets.fromLTRB(8.0,
-                        MediaQuery.of(context).size.height / 3.0, 8.0, 8.0),
-                    child: const Center(
-                      child: Text("No devices found, add one!"),
-                    ),
+                  return const Center(
+                    child: Text("No devices found, add one!"),
                   );
                 } else {
                   List<Widget> _newSliders = snapshot.data!.map((e) {

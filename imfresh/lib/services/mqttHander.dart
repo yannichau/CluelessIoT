@@ -5,8 +5,6 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 
 class MQTTHandler {
   late MqttServerClient client;
-  MqttCurrentConnectionState connectionState = MqttCurrentConnectionState.idle;
-  MqttSubscriptionState subscriptionState = MqttSubscriptionState.idle;
 
   void setupMqttClient() {
     client = MqttServerClient('test.mosquitto.org', '');
@@ -60,25 +58,13 @@ class MQTTHandler {
 
   void _onDisconnected() {
     print('MQTT client disconnected');
-    connectionState = MqttCurrentConnectionState.disconnected;
   }
 
   void _onConnected() {
     print('MQTT client connected');
-    connectionState = MqttCurrentConnectionState.connected;
   }
 
   void _onSubscribed(String topic) {
     print('MQTT client subscribed to topic $topic');
-    subscriptionState = MqttSubscriptionState.subscribed;
   }
 }
-
-enum MqttCurrentConnectionState {
-  idle,
-  connecting,
-  connected,
-  disconnected,
-  error
-}
-enum MqttSubscriptionState { idle, subscribed }
