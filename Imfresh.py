@@ -1,7 +1,7 @@
 from time import sleep
 from Middleman.SensorLibrary import Middleman
 import paho.mqtt.client as mqtt
-from datetime import datetime
+from datetime import datetime, timedelta
 import sqlite3
 import yaml
 import json
@@ -32,7 +32,6 @@ class Imfresh():
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
         # Load current settings from config.yaml
-        self.save_config()
         self.load_config()
         # Initialise library
         self.sensor_library = Middleman()
@@ -44,9 +43,8 @@ class Imfresh():
         data_cursor.execute("CREATE TABLE IF NOT EXISTS ImFreshData (time TIME, voc REAL, humidity REAL, temperature REAL, type TEXT)")
         self.data_con.commit()
         self.data_con.close()
-
         # Activate main loop for device
-        # self.activate()
+        self.activate()
 
     def load_config(self):
     # Load configuration from config.yaml
@@ -60,7 +58,7 @@ class Imfresh():
             self.do_real_time = config["doRealTime"] # bool
             self.do_periodic = config["doPeriodic"] # bool
             self.measurement_interval = config["periodicMeasurementTimePeriod"] # int
-            self.measurement_times = [datetime.time.fromisoformat(time) for time in config["periodicMeasurementTimes"]] # list of strings
+            self.measurement_times = [datetime.fromisoformat(time) for time in config["periodicMeasurementTimes"]] # list of strings
             self.wash_day = datetime.fromisoformat(config["washDay"]) # string
 
     def save_config(self):
@@ -84,7 +82,7 @@ class Imfresh():
         current_stamp = time.isoformat()
         self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
-        data_cursor.execute("INSERT INTO ImFreshData VALUES(?, ?, ?, ?, ?, ?)", (current_stamp, voc, humidity, temperature, type))
+        data_cursor.execute("INSERT INTO ImFreshData VALUES(?, ?, ?, ?, ?)", (current_stamp, voc, humidity, temperature, type))
         self.data_con.commit()
         self.data_con.close()
 
@@ -114,20 +112,20 @@ class Imfresh():
     def periodic(self):
     # Conduct periodic measurements
         while self.do_periodic:
-            if datetime.now() > self.next_time + datetime.timedelta(minutes=self.measurement_interval):
+            if datetime.now() > self.next_time + timedelta(hours=self.measurement_interval):
                 no_time_available = True
                 for new_time in self.measurement_times:
-                    if datetime.now().time() < new_time:
+                    if datetime.now() < new_time:
                         self.prev_time = self.next_time
                         self.next_time = new_time
                         no_time_available = False
                         break
                 if no_time_available:
-                    [datetime.timedelta(days=7) + time for time in self.measurement_times]
-            elif datetime.now() > self.next_time - datetime.timedelta(minutes=20) and datetime.now() < self.next_time:
+                    [timedelta(days=7) + time for time in self.measurement_times]
+            elif datetime.now() > self.next_time - timedelta(minutes=20) and datetime.now() < self.next_time:
                 self.sensor_library.collect_data()
-            elif datetime.now() > self.next_time and datetime < self.next_time + datetime.timedelta(minutes=self.measurement_interval):
-                (voc, humidity, temperature) = self.sensor_library.collect_data()
+            elif datetime.now() > self.next_time and datetime.now() < self.next_time + timedelta(hours=self.measurement_interval):
+                (voc, dc1, humidity, temperature, errval) = self.sensor_library.collect_data()
                 voc = 50 if voc > 50 else voc
                 self.record_data(voc, humidity, temperature, datetime.now(), "PeriodicTemp")
             else:
