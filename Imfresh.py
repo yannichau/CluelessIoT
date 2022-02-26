@@ -77,23 +77,23 @@ class Imfresh():
             config["washDay"] = self.wash_day.isoformat() # string
             yaml.dump(config, file)
 
-    def record_data(self, voc, humidity, temperature, time, type):
+    def record_data(self, voc, humidity, temperature, time, type_data):
     # Record data to database
         current_stamp = time.isoformat()
         self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
-        data_cursor.execute("INSERT INTO ImFreshData VALUES(?, ?, ?, ?, ?)", (current_stamp, voc, humidity, temperature, type))
+        data_cursor.execute("INSERT INTO ImFreshData VALUES(?, ?, ?, ?, ?)", (current_stamp, voc, humidity, temperature, type_data))
         self.data_con.commit()
         self.data_con.close()
 
-    def average_data(self, type):
+    def average_data(self, type_data):
     # Calculate average data from temporary database values
         self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
         voc = 0
         humidity = 0
         temperature = 0
-        temp_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ?", (type))
+        temp_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ?", (type_data))
         if len(temp_data) == 0:
             self.data_con.close()
         else:
@@ -104,7 +104,7 @@ class Imfresh():
             voc = voc / len(temp_data)
             humidity = humidity / len(temp_data)
             temperature = temperature / len(temp_data)
-            data_cursor.execute("DELETE FROM ImFreshData WHERE type = ?", (type))
+            data_cursor.execute("DELETE FROM ImFreshData WHERE type = ?", (type_data))
             self.data_con.commit()
             self.data_con.close()
         return (voc, humidity, temperature)
@@ -144,7 +144,7 @@ class Imfresh():
             if(datapoint == 5):
                 datapoint = 0
                 voc_avg, humidity_avg, temperature_avg = self.average_data("RealTimeTemp")
-                # TODO: Use MQTT to send realtime data to the server
+                self.mqtt_send_data(voc_avg, humidity_avg, temperature_avg, datetime.now().isoformat(), "realtime")
             (dc1, voc, dc2, humidity, temperature, errval) = self.sensor_library.collect_data()
             sleep(1)
             if(errval == 0):
@@ -153,6 +153,19 @@ class Imfresh():
             else:
                 print("Error: " + str(errval))
         self.measuring_real_time = False
+
+    def mqtt_send_data(self, voc, humidity, temperature, timestamp, type_data):
+    # Send data to MQTT broker
+        data_message = {
+            "type": type_data,
+            "timestamp": timestamp,
+            "nextWash": self.next_wash.isoformat(),
+            "deviceId": self.id,
+            "humidity": humidity,
+            "temperature": temperature,
+            "VOC": voc,
+        }
+        self.client.publish(self.id + "/data", json.dumps(data_message))
 
     def mqtt_on_connect(self, client, userdata, flags, rc):
     # Callback for when the client connects to the broker
