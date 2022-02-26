@@ -18,7 +18,7 @@ class Imfresh():
         self.id = "asu343ui41823jisdjajdio1jo2i"
         self.device_name = "Kitchen Imfresh"
         self.alarm_status = True
-        self.alarm_time = datetime.fromisoformat('2022-01-01T12:00:00').time
+        self.alarm_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.device_location = "London"
         self.do_real_time = False
         self.measuring_real_time = False
@@ -28,7 +28,7 @@ class Imfresh():
         self.measurement_times = []
         self.cleanliness_threshold = 1
         # Other Variables
-        self.wash_day = datetime.fromisoformat('2022-02-28T12:00:00').date
+        self.wash_day = datetime.fromisoformat('2022-02-28T12:00:00')
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
         # Load current settings from config.yaml
@@ -52,17 +52,16 @@ class Imfresh():
     # Load configuration from config.yaml
         with open('config.yaml') as f:
             config = yaml.load(f, Loader = yaml.FullLoader)
-            config = yaml.load(f, Loader=yaml.FullLoader)
             self.id = config["deviceId"] # string
             self.device_name = config["deviceName"] # string
             self.alarm_status = config["alarmStatus"] # bool
-            self.alarm_time = datetime.fromisoformat(config["alarmTime"]).time # string
+            self.alarm_time = datetime.fromisoformat(config["alarmTime"]) # string
             self.device_location = config["deviceLocation"] # string
             self.do_real_time = config["doRealTime"] # bool
             self.do_periodic = config["doPeriodic"] # bool
             self.measurement_interval = config["periodicMeasurementTimePeriod"] # int
             self.measurement_times = [datetime.time.fromisoformat(time) for time in config["periodicMeasurementTimes"]] # list of strings
-            self.wash_day = datetime.fromisoformat(config["washDay"]).date # string
+            self.wash_day = datetime.fromisoformat(config["washDay"]) # string
 
     def save_config(self):
     # Save configuration to config.yaml
