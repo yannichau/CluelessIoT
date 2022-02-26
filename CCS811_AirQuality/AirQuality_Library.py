@@ -1,11 +1,11 @@
 # Dependancies for Air Quality Library
-import smbus2
+from smbus2 import SMBus, i2c_msg
 from time import sleep
 
 # Main Class for Air Quality Sensor
 class AirQuality:
     # Define the I2C bus
-    device = smbus2.SMBus(3)
+    device = SMBus(3)
     # Address for Device
     _ADDRESS = 0x5a
     # Register Addresses
@@ -68,7 +68,6 @@ class AirQuality:
             print("[CCS811] ERROR: No valid firmware application is loaded!")
             self.FW_ERROR = 0b1
             
-
         if (current_status & 0b10010001 == 0b00010000):
             print("[CCS811] Loading firmware...")
             self.device.write_byte(self._ADDRESS, self._APP_START)
@@ -81,23 +80,6 @@ class AirQuality:
             self.I2C_ERROR = 0b0
         sleep(0.01)
 
-    def read_gas_amounts(self):
-        print("[CCS811] Activating Measurements...")
-        self.device.write_byte_data(self._ADDRESS, self._MEAS_MODE, 0b00010000)
-        print("[CCS811] Measurements Activated.")
-        print("[CCS811] Upper value is Co2, Lower two Bytes is TVOC.")
-        sleep(4)
-        file = open("gasdata.txt", "a")
-        time = 0
-        while (True):
-            Alg_data = self.device.read_i2c_block_data(self._ADDRESS, self._ALG_RESULT_DATA, 4)
-            Co2_data = Alg_data[0]*16+Alg_data[1]
-            Voc_data = Alg_data[2]*16+Alg_data[3]
-            file.write(str(time) + " CO2: " + str(Co2_data) + " VOC: " + str(Voc_data) + "\n")
-            print(Co2_data, " | ", Voc_data)
-            sleep(0.9)
-            time += 1
-
     def start_measurements(self):
         print("[CCS811] Activating Measurements...")
         self.device.write_byte_data(self._ADDRESS, self._MEAS_MODE, 0b00010000)
@@ -107,13 +89,21 @@ class AirQuality:
     # MUST RUN start_measurements() before getting gas amounts
     def get_gas_amounts(self):
         Alg_data = self.device.read_i2c_block_data(self._ADDRESS, self._ALG_RESULT_DATA, 4)
-        Co2_data = Alg_data[0]*16+Alg_data[1]
-        Voc_data = Alg_data[2]*16+Alg_data[3]
+        Co2_data = Alg_data[0]*256+Alg_data[1]
+        Voc_data = Alg_data[2]*256+Alg_data[3]
 
+        self.check_range(Co2_data, Voc_data)
         error = (self.RANGE_ERROR<<3) | (self.HW_ERROR << 2) | (self.I2C_ERROR<<1) | (self.FW_ERROR)
-        print("[CCS811] {:.2f}".format(Co2_data) + ", " + "{:.2f}".format(Voc_data) + ", error: " + bin(error))
+        print("[CCS811] {:.2f}".format(Co2_data) + "ppm, " + "{:.2f}".format(Voc_data) + "ppb, error: " + bin(error))
 
         return [Co2_data,Voc_data, error]
+    
+    def check_range(self, co2, voc):
+        if co2 > 8192 or co2 < 400 or voc > 1187 or voc < 0:
+            self.RANGE_ERROR = 0b1
+            print("[CCS811] ERROR: Readings out of range.")
+        else:
+            self.RANGE_ERROR = 0b0
 
 def main():
     AirQuality()
