@@ -4,11 +4,13 @@ import paho.mqtt.client as mqtt
 from datetime import datetime
 import sqlite3
 import yaml
+import json
+import threading
 
 class Imfresh():
     # Address to communicate through MQTT. These must be set beforehand
-    broker_address = "placeholder"
-    port_number = 0
+    IP_ADDRESS = "54.174.95.180"
+    PORT = 1883
 
     def __init__(self):
     # Initialise Imfresh Object with relevant parameters
@@ -21,12 +23,16 @@ class Imfresh():
         self.wash_day = datetime.date.fromisoformat('2022-2-30')
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
-        self.measuring = False
-        # Load settings
+        self.do_real_time = False
+        self.measuring_real_time = False
+        self.do_periodic = True
+        self.measuring_periodic = False
+        # Load current settings from config.yaml
         self.load_config()
-        # Initialise objects
+        # Initialise library
         self.sensor_library = SensorLibrary()
-        self.client = mqtt.Client()
+        # Initialise MQTT Client
+        self.client = mqtt.Client("", True, None, mqtt.MQTTv31)
         # Initialise database
         self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
@@ -67,6 +73,7 @@ class Imfresh():
         data_cursor.close()
 
     def average_data(self, type):
+    # Calculate average data from temporary database values
         data_cursor = self.data_con.cursor()
         voc = 0
         humidity = 0
@@ -89,7 +96,7 @@ class Imfresh():
 
     def periodic(self):
     # Conduct periodic measurements
-        while True:
+        while self.do_periodic:
             if datetime.now() > self.next_time + datetime.timedelta(minutes=self.measurement_interval):
                 no_time_available = True
                 for new_time in self.measurement_times:
@@ -110,10 +117,12 @@ class Imfresh():
                 voc_avg, humidity_avg, temperature_avg = self.average_data("PeriodicTemp")
                 if(voc_avg or humidity_avg or temperature_avg):
                     self.record_data(voc_avg, humidity_avg, temperature_avg, self.prev_time, "PeriodicAvg")
+        self.measuring_periodic = False
 
     def realtime(self):
+    # Conduct realtime measurements
         datapoint = 0
-        while self.measuring:
+        while self.do_real_time:
             if(datapoint == 5):
                 datapoint = 0
                 voc_avg, humidity_avg, temperature_avg = self.average_data("RealTimeTemp")
@@ -122,18 +131,52 @@ class Imfresh():
             sleep(1)
             self.record_data(voc, humidity, temperature, datetime.now(), "RealTimeTemp")
             datapoint += 1
+        self.measuring_real_time = False
 
-    def mqtt_listener(self):
-    # TODO: Use MQTT Loop to listen to data from the server
+    def mqtt_on_connect(client, userdata, flags, rc):
+        # Callback for when the client connects to the broker
+        if rc == 0:
+            client.connected_flag = True #set flag
+            print("Connected OK Returned code = ",rc)
+        else:
+            print("Bad connection Returned code = ",rc)
+
+    def mqtt_on_message(client, userdata, message) :
+    # Callback for when a message is received
+        m_decode=str(message.payload.decode("utf-8","ignore"))
+        try:
+            m_in=json.loads(m_decode) #decode json data
+            print("Received {} message on topic {}".format(m_in["type"], message.topic))
+            # TODO: Save settings received on device
+        except ValueError:
+            print("The message was not a valid JSON")
+        
+    def mqtt_client(self):
+    # Connect as client to the MQTT broker and start listening
+        self.client.on_connect = self.mqtt_on_connect
+        self.client.on_message = self.mqtt_on_message
+        self.client.username_pw_set(username="cluelessIoT",password="Imfresh")
+        self.client.connect(self.IP_ADDRESS, self.PORT)
+        self.client.subscribe("IC.embedded/cluelessIoT")
+        self.client.loop_start()
         pass
                     
     def activate(self):
     # Activate main loop for device
+        self.mqtt_client()
         while True:
-            self.periodic()
+            if(self.do_periodic and not self.measuring_periodic):
+                self.measuring_periodic = True
+                self.periodic_thread = threading.Thread(target=self.periodic)
+                self.periodic_thread.start()
+            if(self.do_real_time and not self.measuring_real_time):
+                self.measuring_real_time = True
+                self.realtime()
+                realtimethread = threading.Thread(target=self.realtime)
+                realtimethread.start()
+            
             # TODO: Use algorithm to produce data
             # TODO: Use MQTT to send periodic data to the server
-            # TODO: Use Multithreading to start and stop threads when required
              
 # Main Loop
 def main():
