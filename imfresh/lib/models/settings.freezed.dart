@@ -26,18 +26,22 @@ class _$SettingsTearOff {
       {required String deviceId,
       required String deviceName,
       required bool alarmOn,
+      required String deviceLocation,
       DateTime? alarmTime,
       required bool realtimeMeasuringOn,
-      required bool periodicMeasuringOn,
+      required bool periodicMeasuringEnabled,
+      int? periodicMeasuringTimePeriod,
       List<DateTime>? measuringTimes,
       required int cleanlinessThreshold}) {
     return _Settings(
       deviceId: deviceId,
       deviceName: deviceName,
       alarmOn: alarmOn,
+      deviceLocation: deviceLocation,
       alarmTime: alarmTime,
       realtimeMeasuringOn: realtimeMeasuringOn,
-      periodicMeasuringOn: periodicMeasuringOn,
+      periodicMeasuringEnabled: periodicMeasuringEnabled,
+      periodicMeasuringTimePeriod: periodicMeasuringTimePeriod,
       measuringTimes: measuringTimes,
       cleanlinessThreshold: cleanlinessThreshold,
     );
@@ -56,9 +60,11 @@ mixin _$Settings {
   String get deviceId => throw _privateConstructorUsedError;
   String get deviceName => throw _privateConstructorUsedError;
   bool get alarmOn => throw _privateConstructorUsedError;
+  String get deviceLocation => throw _privateConstructorUsedError;
   DateTime? get alarmTime => throw _privateConstructorUsedError;
   bool get realtimeMeasuringOn => throw _privateConstructorUsedError;
-  bool get periodicMeasuringOn => throw _privateConstructorUsedError;
+  bool get periodicMeasuringEnabled => throw _privateConstructorUsedError;
+  int? get periodicMeasuringTimePeriod => throw _privateConstructorUsedError;
   List<DateTime>? get measuringTimes => throw _privateConstructorUsedError;
   int get cleanlinessThreshold => throw _privateConstructorUsedError;
 
@@ -76,9 +82,11 @@ abstract class $SettingsCopyWith<$Res> {
       {String deviceId,
       String deviceName,
       bool alarmOn,
+      String deviceLocation,
       DateTime? alarmTime,
       bool realtimeMeasuringOn,
-      bool periodicMeasuringOn,
+      bool periodicMeasuringEnabled,
+      int? periodicMeasuringTimePeriod,
       List<DateTime>? measuringTimes,
       int cleanlinessThreshold});
 }
@@ -96,9 +104,11 @@ class _$SettingsCopyWithImpl<$Res> implements $SettingsCopyWith<$Res> {
     Object? deviceId = freezed,
     Object? deviceName = freezed,
     Object? alarmOn = freezed,
+    Object? deviceLocation = freezed,
     Object? alarmTime = freezed,
     Object? realtimeMeasuringOn = freezed,
-    Object? periodicMeasuringOn = freezed,
+    Object? periodicMeasuringEnabled = freezed,
+    Object? periodicMeasuringTimePeriod = freezed,
     Object? measuringTimes = freezed,
     Object? cleanlinessThreshold = freezed,
   }) {
@@ -115,6 +125,10 @@ class _$SettingsCopyWithImpl<$Res> implements $SettingsCopyWith<$Res> {
           ? _value.alarmOn
           : alarmOn // ignore: cast_nullable_to_non_nullable
               as bool,
+      deviceLocation: deviceLocation == freezed
+          ? _value.deviceLocation
+          : deviceLocation // ignore: cast_nullable_to_non_nullable
+              as String,
       alarmTime: alarmTime == freezed
           ? _value.alarmTime
           : alarmTime // ignore: cast_nullable_to_non_nullable
@@ -123,10 +137,14 @@ class _$SettingsCopyWithImpl<$Res> implements $SettingsCopyWith<$Res> {
           ? _value.realtimeMeasuringOn
           : realtimeMeasuringOn // ignore: cast_nullable_to_non_nullable
               as bool,
-      periodicMeasuringOn: periodicMeasuringOn == freezed
-          ? _value.periodicMeasuringOn
-          : periodicMeasuringOn // ignore: cast_nullable_to_non_nullable
+      periodicMeasuringEnabled: periodicMeasuringEnabled == freezed
+          ? _value.periodicMeasuringEnabled
+          : periodicMeasuringEnabled // ignore: cast_nullable_to_non_nullable
               as bool,
+      periodicMeasuringTimePeriod: periodicMeasuringTimePeriod == freezed
+          ? _value.periodicMeasuringTimePeriod
+          : periodicMeasuringTimePeriod // ignore: cast_nullable_to_non_nullable
+              as int?,
       measuringTimes: measuringTimes == freezed
           ? _value.measuringTimes
           : measuringTimes // ignore: cast_nullable_to_non_nullable
@@ -148,9 +166,11 @@ abstract class _$SettingsCopyWith<$Res> implements $SettingsCopyWith<$Res> {
       {String deviceId,
       String deviceName,
       bool alarmOn,
+      String deviceLocation,
       DateTime? alarmTime,
       bool realtimeMeasuringOn,
-      bool periodicMeasuringOn,
+      bool periodicMeasuringEnabled,
+      int? periodicMeasuringTimePeriod,
       List<DateTime>? measuringTimes,
       int cleanlinessThreshold});
 }
@@ -169,9 +189,11 @@ class __$SettingsCopyWithImpl<$Res> extends _$SettingsCopyWithImpl<$Res>
     Object? deviceId = freezed,
     Object? deviceName = freezed,
     Object? alarmOn = freezed,
+    Object? deviceLocation = freezed,
     Object? alarmTime = freezed,
     Object? realtimeMeasuringOn = freezed,
-    Object? periodicMeasuringOn = freezed,
+    Object? periodicMeasuringEnabled = freezed,
+    Object? periodicMeasuringTimePeriod = freezed,
     Object? measuringTimes = freezed,
     Object? cleanlinessThreshold = freezed,
   }) {
@@ -188,6 +210,10 @@ class __$SettingsCopyWithImpl<$Res> extends _$SettingsCopyWithImpl<$Res>
           ? _value.alarmOn
           : alarmOn // ignore: cast_nullable_to_non_nullable
               as bool,
+      deviceLocation: deviceLocation == freezed
+          ? _value.deviceLocation
+          : deviceLocation // ignore: cast_nullable_to_non_nullable
+              as String,
       alarmTime: alarmTime == freezed
           ? _value.alarmTime
           : alarmTime // ignore: cast_nullable_to_non_nullable
@@ -196,10 +222,14 @@ class __$SettingsCopyWithImpl<$Res> extends _$SettingsCopyWithImpl<$Res>
           ? _value.realtimeMeasuringOn
           : realtimeMeasuringOn // ignore: cast_nullable_to_non_nullable
               as bool,
-      periodicMeasuringOn: periodicMeasuringOn == freezed
-          ? _value.periodicMeasuringOn
-          : periodicMeasuringOn // ignore: cast_nullable_to_non_nullable
+      periodicMeasuringEnabled: periodicMeasuringEnabled == freezed
+          ? _value.periodicMeasuringEnabled
+          : periodicMeasuringEnabled // ignore: cast_nullable_to_non_nullable
               as bool,
+      periodicMeasuringTimePeriod: periodicMeasuringTimePeriod == freezed
+          ? _value.periodicMeasuringTimePeriod
+          : periodicMeasuringTimePeriod // ignore: cast_nullable_to_non_nullable
+              as int?,
       measuringTimes: measuringTimes == freezed
           ? _value.measuringTimes
           : measuringTimes // ignore: cast_nullable_to_non_nullable
@@ -219,9 +249,11 @@ class _$_Settings implements _Settings {
       {required this.deviceId,
       required this.deviceName,
       required this.alarmOn,
+      required this.deviceLocation,
       this.alarmTime,
       required this.realtimeMeasuringOn,
-      required this.periodicMeasuringOn,
+      required this.periodicMeasuringEnabled,
+      this.periodicMeasuringTimePeriod,
       this.measuringTimes,
       required this.cleanlinessThreshold});
 
@@ -235,11 +267,15 @@ class _$_Settings implements _Settings {
   @override
   final bool alarmOn;
   @override
+  final String deviceLocation;
+  @override
   final DateTime? alarmTime;
   @override
   final bool realtimeMeasuringOn;
   @override
-  final bool periodicMeasuringOn;
+  final bool periodicMeasuringEnabled;
+  @override
+  final int? periodicMeasuringTimePeriod;
   @override
   final List<DateTime>? measuringTimes;
   @override
@@ -247,7 +283,7 @@ class _$_Settings implements _Settings {
 
   @override
   String toString() {
-    return 'Settings(deviceId: $deviceId, deviceName: $deviceName, alarmOn: $alarmOn, alarmTime: $alarmTime, realtimeMeasuringOn: $realtimeMeasuringOn, periodicMeasuringOn: $periodicMeasuringOn, measuringTimes: $measuringTimes, cleanlinessThreshold: $cleanlinessThreshold)';
+    return 'Settings(deviceId: $deviceId, deviceName: $deviceName, alarmOn: $alarmOn, deviceLocation: $deviceLocation, alarmTime: $alarmTime, realtimeMeasuringOn: $realtimeMeasuringOn, periodicMeasuringEnabled: $periodicMeasuringEnabled, periodicMeasuringTimePeriod: $periodicMeasuringTimePeriod, measuringTimes: $measuringTimes, cleanlinessThreshold: $cleanlinessThreshold)';
   }
 
   @override
@@ -259,11 +295,16 @@ class _$_Settings implements _Settings {
             const DeepCollectionEquality()
                 .equals(other.deviceName, deviceName) &&
             const DeepCollectionEquality().equals(other.alarmOn, alarmOn) &&
+            const DeepCollectionEquality()
+                .equals(other.deviceLocation, deviceLocation) &&
             const DeepCollectionEquality().equals(other.alarmTime, alarmTime) &&
             const DeepCollectionEquality()
                 .equals(other.realtimeMeasuringOn, realtimeMeasuringOn) &&
-            const DeepCollectionEquality()
-                .equals(other.periodicMeasuringOn, periodicMeasuringOn) &&
+            const DeepCollectionEquality().equals(
+                other.periodicMeasuringEnabled, periodicMeasuringEnabled) &&
+            const DeepCollectionEquality().equals(
+                other.periodicMeasuringTimePeriod,
+                periodicMeasuringTimePeriod) &&
             const DeepCollectionEquality()
                 .equals(other.measuringTimes, measuringTimes) &&
             const DeepCollectionEquality()
@@ -276,9 +317,11 @@ class _$_Settings implements _Settings {
       const DeepCollectionEquality().hash(deviceId),
       const DeepCollectionEquality().hash(deviceName),
       const DeepCollectionEquality().hash(alarmOn),
+      const DeepCollectionEquality().hash(deviceLocation),
       const DeepCollectionEquality().hash(alarmTime),
       const DeepCollectionEquality().hash(realtimeMeasuringOn),
-      const DeepCollectionEquality().hash(periodicMeasuringOn),
+      const DeepCollectionEquality().hash(periodicMeasuringEnabled),
+      const DeepCollectionEquality().hash(periodicMeasuringTimePeriod),
       const DeepCollectionEquality().hash(measuringTimes),
       const DeepCollectionEquality().hash(cleanlinessThreshold));
 
@@ -298,9 +341,11 @@ abstract class _Settings implements Settings {
       {required String deviceId,
       required String deviceName,
       required bool alarmOn,
+      required String deviceLocation,
       DateTime? alarmTime,
       required bool realtimeMeasuringOn,
-      required bool periodicMeasuringOn,
+      required bool periodicMeasuringEnabled,
+      int? periodicMeasuringTimePeriod,
       List<DateTime>? measuringTimes,
       required int cleanlinessThreshold}) = _$_Settings;
 
@@ -313,11 +358,15 @@ abstract class _Settings implements Settings {
   @override
   bool get alarmOn;
   @override
+  String get deviceLocation;
+  @override
   DateTime? get alarmTime;
   @override
   bool get realtimeMeasuringOn;
   @override
-  bool get periodicMeasuringOn;
+  bool get periodicMeasuringEnabled;
+  @override
+  int? get periodicMeasuringTimePeriod;
   @override
   List<DateTime>? get measuringTimes;
   @override

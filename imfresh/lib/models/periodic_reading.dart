@@ -6,13 +6,12 @@ part 'periodic_reading.g.dart';
 @freezed
 class PeriodicReading with _$PeriodicReading {
   factory PeriodicReading({
-    required String timestamp,
-    required String nextWash,
+    required DateTime timestamp,
+    required DateTime nextWash,
     required String deviceID,
     required double humidity,
     required double temperature,
-    required double airQuality,
-    required int cleanlinessScore,
+    required double VOC,
   }) = _PeriodicReading;
 
   factory PeriodicReading.fromJson(Map<String, dynamic> json) =>

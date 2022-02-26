@@ -27,7 +27,7 @@ class _NewDeviceState extends State<NewDevice> {
                       controller: MobileScannerController(
                           facing: CameraFacing.back, torchEnabled: true),
                       onDetect: (barcode, args) {
-                        final String code = barcode.rawValue;
+                        final String code = barcode.rawValue!;
                         print('Barcode: $code');
                         setState(() {
                           textFound = true;

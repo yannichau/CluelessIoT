@@ -27,9 +27,12 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(30))),
       margin: const EdgeInsets.all(8.0),
-      elevation: 10,
+      elevation: 2,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(0, 15, 0, 15),
@@ -39,14 +42,52 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
               style: Theme.of(context).textTheme.headline6,
             ),
           ),
-          TextButton(
-            onPressed: () {
-              _displayTextInputDialog(context);
-            },
-            child: const Text("Edit Device Name",
-                style: TextStyle(
-                  color: Colors.blue,
-                )),
+          ListTile(
+            title: const Text('Device Location'),
+            subtitle: Text('Current Location: ${_settings.deviceLocation}'),
+            trailing: IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Device Location (closest city)'),
+                        content: TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              valueText = value;
+                            });
+                          },
+                          controller: _textFieldController
+                            ..text = _settings.deviceLocation,
+                          decoration: const InputDecoration(
+                              hintText: 'Enter closest city to device'),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('CANCEL'),
+                            onPressed: () {
+                              setState(() {
+                                Navigator.pop(context);
+                              });
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('OK'),
+                            onPressed: () {
+                              setState(() {
+                                _settings = _settings.copyWith(
+                                    deviceLocation: valueText);
+                                Navigator.pop(context);
+                              });
+                            },
+                          ),
+                        ],
+                      );
+                    });
+              },
+            ),
           ),
           SwitchListTile(
             title: const Text('Alarm Setting'),
@@ -99,20 +140,20 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
                     });
               },
             ),
-          SwitchListTile(
-            title: const Text('Realtime Measurement Setting'),
-            subtitle: const Text(
-                'Enables or disables realtime measurement when app is open'),
-            value: _settings.realtimeMeasuringOn,
-            onChanged: (status) => setState(() =>
-                _settings = _settings.copyWith(realtimeMeasuringOn: status)),
-          ),
+          // SwitchListTile(
+          //   title: const Text('Realtime Measurement Setting'),
+          //   subtitle: const Text(
+          //       'Enables or disables realtime measurement when app is open'),
+          //   value: _settings.realtimeMeasuringOn,
+          //   onChanged: (status) => setState(() =>
+          //       _settings = _settings.copyWith(realtimeMeasuringOn: status)),
+          // ),
           SwitchListTile(
             title: const Text('Periodic Measurement Setting'),
             subtitle: const Text('Enables or disables periodic measurements'),
-            value: _settings.periodicMeasuringOn,
-            onChanged: (status) => setState(() =>
-                _settings = _settings.copyWith(periodicMeasuringOn: status)),
+            value: _settings.periodicMeasuringEnabled,
+            onChanged: (status) => setState(() => _settings =
+                _settings.copyWith(periodicMeasuringEnabled: status)),
           ),
           ListTile(
             title: const Text('Cleanliness Threshold'),
@@ -134,12 +175,24 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
             "Device ID: ${_settings.deviceId}",
             style: Theme.of(context).textTheme.caption,
           ),
+          const SizedBox(
+            height: 15,
+          ),
+          TextButton(
+            onPressed: () {
+              _displayTextInputDialog(context);
+            },
+            child: const Text("Edit Device Name",
+                style: TextStyle(
+                  color: Colors.blue,
+                )),
+          ),
           TextButton(
             onPressed: () {
               showCupertinoDialog<void>(
                 context: context,
                 builder: (BuildContext context) => CupertinoAlertDialog(
-                  title: const Text('Reset Device'),
+                  title: Text('Reset ${_settings.deviceName}'),
                   content: const Text(
                       'Proceed with destructive action? This cannot be undone.'),
                   actions: <CupertinoDialogAction>[
@@ -160,10 +213,12 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
                 ),
               );
             },
-            child: const Text('Reset device and delete all data',
-                style: TextStyle(
-                  color: Colors.red,
-                )),
+            child: const Text(
+              'Reset device and delete all data',
+              style: TextStyle(
+                color: Colors.red,
+              ),
+            ),
           )
         ],
       ),
@@ -172,7 +227,7 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
 
   @override
   void dispose() {
-    print(_settings);
+    print(_settings.toJson());
     super.dispose();
   }
 

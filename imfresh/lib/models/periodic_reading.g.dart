@@ -8,22 +8,20 @@ part of 'periodic_reading.dart';
 
 _$_PeriodicReading _$$_PeriodicReadingFromJson(Map<String, dynamic> json) =>
     _$_PeriodicReading(
-      timestamp: json['timestamp'] as String,
-      nextWash: json['nextWash'] as String,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      nextWash: DateTime.parse(json['nextWash'] as String),
       deviceID: json['deviceID'] as String,
       humidity: (json['humidity'] as num).toDouble(),
       temperature: (json['temperature'] as num).toDouble(),
-      airQuality: (json['airQuality'] as num).toDouble(),
-      cleanlinessScore: json['cleanlinessScore'] as int,
+      VOC: (json['VOC'] as num).toDouble(),
     );
 
 Map<String, dynamic> _$$_PeriodicReadingToJson(_$_PeriodicReading instance) =>
     <String, dynamic>{
-      'timestamp': instance.timestamp,
-      'nextWash': instance.nextWash,
+      'timestamp': instance.timestamp.toIso8601String(),
+      'nextWash': instance.nextWash.toIso8601String(),
       'deviceID': instance.deviceID,
       'humidity': instance.humidity,
       'temperature': instance.temperature,
-      'airQuality': instance.airQuality,
-      'cleanlinessScore': instance.cleanlinessScore,
+      'VOC': instance.VOC,
     };

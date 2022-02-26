@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive/hive.dart';
 import 'package:imfresh/features/home_page.dart';
@@ -21,9 +22,15 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
+        canvasColor: Colors.white,
         primarySwatch: Colors.green,
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+        ),
       ),
       routes: {
         // When navigating to the "/" route, build the FirstScreen widget.

@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:imfresh/features/device_settings_card.dart';
 import 'package:imfresh/models/settings.dart';
@@ -10,10 +11,31 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool alarmOn = false;
-  bool measuringOn = false;
-  DateTime selectedDate = DateTime.now();
-  int cleanlinessThreshold = 5;
+  final List<Widget> _sliders = [
+    DeviceSettingsCard(
+        initalSettings: Settings(
+            deviceId: "askdfjhdsklfhjkjasdhfjlsk",
+            deviceName: "Kitchen imfresh",
+            deviceLocation: "London",
+            alarmOn: true,
+            alarmTime: DateTime.now(),
+            realtimeMeasuringOn: true,
+            periodicMeasuringEnabled: false,
+            cleanlinessThreshold: 3)),
+    DeviceSettingsCard(
+        initalSettings: Settings(
+            deviceId: "askdfjhdsklfhjkjasdhfjlk",
+            deviceName: "Laundry imfresh",
+            deviceLocation: "Singapore",
+            alarmOn: true,
+            alarmTime: DateTime.now(),
+            realtimeMeasuringOn: true,
+            periodicMeasuringEnabled: false,
+            cleanlinessThreshold: 5)),
+  ];
+
+  int _current = 0;
+  final CarouselController _controller = CarouselController();
 
   @override
   Widget build(BuildContext context) {
@@ -24,16 +46,48 @@ class _SettingsPageState extends State<SettingsPage> {
       body: SafeArea(
         child: Material(
           child: SingleChildScrollView(
-              child: DeviceSettingsCard(
-            initalSettings: Settings(
-                deviceId: "askdfjhdsklfhjkjasdhfjlk",
-                deviceName: "Kitchen imfresh",
-                alarmOn: true,
-                alarmTime: DateTime.now(),
-                realtimeMeasuringOn: true,
-                periodicMeasuringOn: false,
-                cleanlinessThreshold: 3),
-          )),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Flexible(
+                fit: FlexFit.loose,
+                child: CarouselSlider(
+                  items: _sliders,
+                  carouselController: _controller,
+                  options: CarouselOptions(
+                      autoPlay: false,
+                      enlargeCenterPage: false,
+                      aspectRatio: 0.6,
+                      enableInfiniteScroll: false,
+                      viewportFraction: 0.9,
+                      onPageChanged: (index, reason) {
+                        setState(() {
+                          _current = index;
+                        });
+                      }),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _sliders.asMap().entries.map((entry) {
+                  return GestureDetector(
+                    onTap: () => _controller.animateToPage(entry.key),
+                    child: Container(
+                      width: 12.0,
+                      height: 12.0,
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 4.0),
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: (Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black)
+                              .withOpacity(_current == entry.key ? 0.9 : 0.4)),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ]),
+          ),
         ),
       ),
     );

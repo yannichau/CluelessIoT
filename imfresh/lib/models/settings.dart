@@ -9,9 +9,11 @@ class Settings with _$Settings {
     required String deviceId,
     required String deviceName,
     required bool alarmOn,
+    required String deviceLocation,
     DateTime? alarmTime,
     required bool realtimeMeasuringOn,
-    required bool periodicMeasuringOn,
+    required bool periodicMeasuringEnabled,
+    int? periodicMeasuringTimePeriod,
     List<DateTime>? measuringTimes,
     required int cleanlinessThreshold,
   }) = _Settings;

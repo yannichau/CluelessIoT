@@ -23,21 +23,19 @@ class _$PeriodicReadingTearOff {
   const _$PeriodicReadingTearOff();
 
   _PeriodicReading call(
-      {required String timestamp,
-      required String nextWash,
+      {required DateTime timestamp,
+      required DateTime nextWash,
       required String deviceID,
       required double humidity,
       required double temperature,
-      required double airQuality,
-      required int cleanlinessScore}) {
+      required double VOC}) {
     return _PeriodicReading(
       timestamp: timestamp,
       nextWash: nextWash,
       deviceID: deviceID,
       humidity: humidity,
       temperature: temperature,
-      airQuality: airQuality,
-      cleanlinessScore: cleanlinessScore,
+      VOC: VOC,
     );
   }
 
@@ -51,13 +49,12 @@ const $PeriodicReading = _$PeriodicReadingTearOff();
 
 /// @nodoc
 mixin _$PeriodicReading {
-  String get timestamp => throw _privateConstructorUsedError;
-  String get nextWash => throw _privateConstructorUsedError;
+  DateTime get timestamp => throw _privateConstructorUsedError;
+  DateTime get nextWash => throw _privateConstructorUsedError;
   String get deviceID => throw _privateConstructorUsedError;
   double get humidity => throw _privateConstructorUsedError;
   double get temperature => throw _privateConstructorUsedError;
-  double get airQuality => throw _privateConstructorUsedError;
-  int get cleanlinessScore => throw _privateConstructorUsedError;
+  double get VOC => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -71,13 +68,12 @@ abstract class $PeriodicReadingCopyWith<$Res> {
           PeriodicReading value, $Res Function(PeriodicReading) then) =
       _$PeriodicReadingCopyWithImpl<$Res>;
   $Res call(
-      {String timestamp,
-      String nextWash,
+      {DateTime timestamp,
+      DateTime nextWash,
       String deviceID,
       double humidity,
       double temperature,
-      double airQuality,
-      int cleanlinessScore});
+      double VOC});
 }
 
 /// @nodoc
@@ -96,18 +92,17 @@ class _$PeriodicReadingCopyWithImpl<$Res>
     Object? deviceID = freezed,
     Object? humidity = freezed,
     Object? temperature = freezed,
-    Object? airQuality = freezed,
-    Object? cleanlinessScore = freezed,
+    Object? VOC = freezed,
   }) {
     return _then(_value.copyWith(
       timestamp: timestamp == freezed
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
-              as String,
+              as DateTime,
       nextWash: nextWash == freezed
           ? _value.nextWash
           : nextWash // ignore: cast_nullable_to_non_nullable
-              as String,
+              as DateTime,
       deviceID: deviceID == freezed
           ? _value.deviceID
           : deviceID // ignore: cast_nullable_to_non_nullable
@@ -120,14 +115,10 @@ class _$PeriodicReadingCopyWithImpl<$Res>
           ? _value.temperature
           : temperature // ignore: cast_nullable_to_non_nullable
               as double,
-      airQuality: airQuality == freezed
-          ? _value.airQuality
-          : airQuality // ignore: cast_nullable_to_non_nullable
+      VOC: VOC == freezed
+          ? _value.VOC
+          : VOC // ignore: cast_nullable_to_non_nullable
               as double,
-      cleanlinessScore: cleanlinessScore == freezed
-          ? _value.cleanlinessScore
-          : cleanlinessScore // ignore: cast_nullable_to_non_nullable
-              as int,
     ));
   }
 }
@@ -140,13 +131,12 @@ abstract class _$PeriodicReadingCopyWith<$Res>
       __$PeriodicReadingCopyWithImpl<$Res>;
   @override
   $Res call(
-      {String timestamp,
-      String nextWash,
+      {DateTime timestamp,
+      DateTime nextWash,
       String deviceID,
       double humidity,
       double temperature,
-      double airQuality,
-      int cleanlinessScore});
+      double VOC});
 }
 
 /// @nodoc
@@ -167,18 +157,17 @@ class __$PeriodicReadingCopyWithImpl<$Res>
     Object? deviceID = freezed,
     Object? humidity = freezed,
     Object? temperature = freezed,
-    Object? airQuality = freezed,
-    Object? cleanlinessScore = freezed,
+    Object? VOC = freezed,
   }) {
     return _then(_PeriodicReading(
       timestamp: timestamp == freezed
           ? _value.timestamp
           : timestamp // ignore: cast_nullable_to_non_nullable
-              as String,
+              as DateTime,
       nextWash: nextWash == freezed
           ? _value.nextWash
           : nextWash // ignore: cast_nullable_to_non_nullable
-              as String,
+              as DateTime,
       deviceID: deviceID == freezed
           ? _value.deviceID
           : deviceID // ignore: cast_nullable_to_non_nullable
@@ -191,14 +180,10 @@ class __$PeriodicReadingCopyWithImpl<$Res>
           ? _value.temperature
           : temperature // ignore: cast_nullable_to_non_nullable
               as double,
-      airQuality: airQuality == freezed
-          ? _value.airQuality
-          : airQuality // ignore: cast_nullable_to_non_nullable
+      VOC: VOC == freezed
+          ? _value.VOC
+          : VOC // ignore: cast_nullable_to_non_nullable
               as double,
-      cleanlinessScore: cleanlinessScore == freezed
-          ? _value.cleanlinessScore
-          : cleanlinessScore // ignore: cast_nullable_to_non_nullable
-              as int,
     ));
   }
 }
@@ -212,16 +197,15 @@ class _$_PeriodicReading implements _PeriodicReading {
       required this.deviceID,
       required this.humidity,
       required this.temperature,
-      required this.airQuality,
-      required this.cleanlinessScore});
+      required this.VOC});
 
   factory _$_PeriodicReading.fromJson(Map<String, dynamic> json) =>
       _$$_PeriodicReadingFromJson(json);
 
   @override
-  final String timestamp;
+  final DateTime timestamp;
   @override
-  final String nextWash;
+  final DateTime nextWash;
   @override
   final String deviceID;
   @override
@@ -229,13 +213,11 @@ class _$_PeriodicReading implements _PeriodicReading {
   @override
   final double temperature;
   @override
-  final double airQuality;
-  @override
-  final int cleanlinessScore;
+  final double VOC;
 
   @override
   String toString() {
-    return 'PeriodicReading(timestamp: $timestamp, nextWash: $nextWash, deviceID: $deviceID, humidity: $humidity, temperature: $temperature, airQuality: $airQuality, cleanlinessScore: $cleanlinessScore)';
+    return 'PeriodicReading(timestamp: $timestamp, nextWash: $nextWash, deviceID: $deviceID, humidity: $humidity, temperature: $temperature, VOC: $VOC)';
   }
 
   @override
@@ -249,10 +231,7 @@ class _$_PeriodicReading implements _PeriodicReading {
             const DeepCollectionEquality().equals(other.humidity, humidity) &&
             const DeepCollectionEquality()
                 .equals(other.temperature, temperature) &&
-            const DeepCollectionEquality()
-                .equals(other.airQuality, airQuality) &&
-            const DeepCollectionEquality()
-                .equals(other.cleanlinessScore, cleanlinessScore));
+            const DeepCollectionEquality().equals(other.VOC, VOC));
   }
 
   @override
@@ -263,8 +242,7 @@ class _$_PeriodicReading implements _PeriodicReading {
       const DeepCollectionEquality().hash(deviceID),
       const DeepCollectionEquality().hash(humidity),
       const DeepCollectionEquality().hash(temperature),
-      const DeepCollectionEquality().hash(airQuality),
-      const DeepCollectionEquality().hash(cleanlinessScore));
+      const DeepCollectionEquality().hash(VOC));
 
   @JsonKey(ignore: true)
   @override
@@ -279,21 +257,20 @@ class _$_PeriodicReading implements _PeriodicReading {
 
 abstract class _PeriodicReading implements PeriodicReading {
   factory _PeriodicReading(
-      {required String timestamp,
-      required String nextWash,
+      {required DateTime timestamp,
+      required DateTime nextWash,
       required String deviceID,
       required double humidity,
       required double temperature,
-      required double airQuality,
-      required int cleanlinessScore}) = _$_PeriodicReading;
+      required double VOC}) = _$_PeriodicReading;
 
   factory _PeriodicReading.fromJson(Map<String, dynamic> json) =
       _$_PeriodicReading.fromJson;
 
   @override
-  String get timestamp;
+  DateTime get timestamp;
   @override
-  String get nextWash;
+  DateTime get nextWash;
   @override
   String get deviceID;
   @override
@@ -301,9 +278,7 @@ abstract class _PeriodicReading implements PeriodicReading {
   @override
   double get temperature;
   @override
-  double get airQuality;
-  @override
-  int get cleanlinessScore;
+  double get VOC;
   @override
   @JsonKey(ignore: true)
   _$PeriodicReadingCopyWith<_PeriodicReading> get copyWith =>
