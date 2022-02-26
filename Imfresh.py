@@ -1,5 +1,5 @@
 from time import sleep
-from CluelessIoT.Sensors.SensorLibrary import SensorLibrary
+from Middleman.SensorLibrary import Middleman
 import paho.mqtt.client as mqtt
 from datetime import datetime
 import sqlite3
@@ -15,22 +15,26 @@ class Imfresh():
     def __init__(self):
     # Initialise Imfresh Object with relevant parameters
         # Config Variables (With Placeholders for examples)
-        self.measurement_times = []
-        self.measurement_interval = 60
-        self.cleanliness_threshold = 1
+        self.id = "asu343ui41823jisdjajdio1jo2i"
+        self.device_name = "Kitchen Imfresh"
         self.alarm_status = True
-        self.alarm_time = datetime.time.fromisoformat('12:00:00')
-        self.wash_day = datetime.date.fromisoformat('2022-2-30')
-        self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
-        self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
+        self.alarm_time = datetime.fromisoformat('2022-01-01T12:00:00').time
+        self.device_location = "London"
         self.do_real_time = False
         self.measuring_real_time = False
         self.do_periodic = True
         self.measuring_periodic = False
+        self.measurement_interval = 1
+        self.measurement_times = []
+        self.cleanliness_threshold = 1
+        # Other Variables
+        self.wash_day = datetime.fromisoformat('2022-02-30T12:00:00').date
+        self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
+        self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
         # Load current settings from config.yaml
         self.load_config()
         # Initialise library
-        self.sensor_library = SensorLibrary()
+        self.sensor_library = Middleman()
         # Initialise MQTT Client
         self.client = mqtt.Client("", True, None, mqtt.MQTTv31)
         # Initialise database
@@ -45,24 +49,33 @@ class Imfresh():
     def load_config(self):
     # Load configuration from config.yaml
         with open('config.yaml') as f:
+            config = yaml.load(f, Loader = yaml.FullLoader)
             config = yaml.load(f, Loader=yaml.FullLoader)
-            self.measurement_schedule = [datetime.fromisoformat(time) for time in config["MeasurementSchedule"]["Times"]]
-            self.measurement_interval = config["MeasurementSchedule"]["Interval"]
-            self.cleanliness_threshold = config["CleanlinessThreshold"]
-            self.alarm_status = config["Alarm"]["Status"]
-            self.alarm_time = datetime.time.fromisoformat(config["Alarm"]["Time"])
-            self.wash_day = datetime.date.fromisoformat(config["WashDay"])
+            self.id = config["deviceId"] # string
+            self.device_name = config["deviceName"] # string
+            self.alarm_status = config["alarmStatus"] # bool
+            self.alarm_time = datetime.fromisoformat(config["alarmTime"]).time # string
+            self.device_location = config["deviceLocation"] # string
+            self.do_real_time = config["doRealTime"] # bool
+            self.do_periodic = config["doPeriodic"] # bool
+            self.measurement_interval = config["periodicMeasurementTimePeriod"] # int
+            self.measurement_times = [datetime.time.fromisoformat(time) for time in config["periodicMeasurementTimes"]] # list of strings
+            self.wash_day = datetime.fromisoformat(config["washDay"]).date # string
 
     def save_config(self):
     # Save configuration to config.yaml
         with open('config.yaml') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-            config["MeasurementSchedule"]["Times"] = [time.isoformat() for time in self.measurement_schedule]
-            config["MeasurementSchedule"]["Interval"] = self.measurement_interval
-            config["CleanlinessThreshold"] = self.cleanliness_threshold
-            config["Alarm"]["Status"] = self.alarm_on
-            config["Alarm"]["Time"] = self.alarm_time.isoformat()
-            config["WashDay"] = self.wash_day.isoformat()
+            config["deviceId"] = self.id # string
+            config["deviceName"] = self.device_name # string
+            config["alarmStatus"] = self.alarm_status # bool
+            config["alarmTime"] = self.alarm_time.isoformat() # string
+            config["deviceLocation"] = self.device_location # string
+            config["doRealTime"] = self.do_real_time # bool
+            config["doPeriodic"] = self.do_periodic # bool
+            config["periodicMeasurementTimePeriod"] = self.measurement_interval # int
+            config["periodicMeasurementTimes"] = [time.isoformat() for time in self.measurement_times] # list of strings
+            config["washDay"] = self.wash_day.isoformat() # string
 
     def record_data(self, voc, humidity, temperature, time, type):
     # Record data to database
@@ -157,7 +170,7 @@ class Imfresh():
         self.client.on_message = self.mqtt_on_message
         self.client.username_pw_set(username="cluelessIoT",password="Imfresh")
         self.client.connect(self.IP_ADDRESS, self.PORT)
-        self.client.subscribe("IC.embedded/cluelessIoT")
+        self.client.subscribe(["IC.embedded/cluelessIoT"])
         self.client.loop_start()
         pass
                     
