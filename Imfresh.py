@@ -151,8 +151,9 @@ class Imfresh():
     def realtime(self):
     # Conduct realtime measurements
         print("Starting realtime loop...")
+        start_time = datetime.now()
         datapoint = 0
-        while self.do_real_time:
+        while self.do_real_time and datetime.now() < self.start_time + timedelta(minutes=15):
             if(datapoint == 5):
                 datapoint = 0
                 voc_avg, humidity_avg, temperature_avg = self.average_data("RealTimeTemp")
