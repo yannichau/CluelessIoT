@@ -209,8 +209,11 @@ class Imfresh():
         except ValueError:
             print("Received Command")
             if m_decode == "ErrorLog":
-                # Need to handle request
-                pass
+                file = open("Error.log", "rb")
+                error_log = file.read()
+                byte_array = bytes(error_log)
+                client.publish("self.id" + "/data", "ErrorLog")
+                client.publish("self.id" + "/data", byte_array)
             elif m_decode == "Washed":
                 # Need to handle command
                 pass
@@ -249,7 +252,6 @@ class Imfresh():
                         self.alarm_library.buzz()
             
             # TODO: Use algorithm to produce data
-            # TODO: Use MQTT to send periodic data to the server
              
 # Main Loop
 def main():
