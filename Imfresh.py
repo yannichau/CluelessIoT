@@ -218,8 +218,12 @@ class Imfresh():
                 # Need to handle command
                 pass
             elif m_decode.split()[0] == "PeriodicLog":
-                # Need to handle command
-                pass
+                self.data_con = sqlite3.connect('data.sqlite')
+                data_cursor = self.data_con.cursor()
+                periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", m_decode.split()[1])).fetchall()
+                self.data_con.close()
+                periodic_jsons = [{"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]} for row in periodic_data]
+                client.publish("self.id" + "/data", json.dumps(periodic_jsons))
             else:
                 print("Invalid Command Received")
         
