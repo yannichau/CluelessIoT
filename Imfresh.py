@@ -7,6 +7,7 @@ import sqlite3
 import yaml
 import json
 import threading
+import logging
 
 class Imfresh():
     # Address to communicate through MQTT. These must be set beforehand
@@ -37,6 +38,9 @@ class Imfresh():
         # Initialise library
         self.sensor_library = Middleman()
         self.alarm_library = Alarm()
+        # Initialise Logging
+        logging.basicConfig(filename='Error.log', level=logging.DEBUG)
+        logging.info("INFO - Started Session at {}.", datetime.now())
         # Initialise MQTT Client
         self.client = mqtt.Client("", True, None, mqtt.MQTTv31)
         # Initialise database
@@ -46,10 +50,12 @@ class Imfresh():
         self.data_con.commit()
         self.data_con.close()
         # Activate main loop for device
+        print("Successfully initialised Imfresh Device!")
         self.activate()
 
     def load_config(self):
     # Load configuration from config.yaml
+        print("Loading configuration...")
         with open('config.yaml', 'r') as file:
             config = yaml.safe_load(file)
             self.id = config["deviceId"] # string
@@ -65,6 +71,7 @@ class Imfresh():
 
     def save_config(self):
     # Save configuration to config.yaml
+        print("Saving configuration...")
         with open('config.yaml', 'w') as file:
             config = {}
             config["deviceId"] = self.id # string
@@ -114,6 +121,7 @@ class Imfresh():
     def periodic(self):
     # Conduct periodic measurements
         while self.do_periodic:
+            print("Starting periodic loop...")
             if datetime.now() > self.next_time + timedelta(hours=self.measurement_interval):
                 no_time_available = True
                 for new_time in self.measurement_times:
@@ -127,12 +135,13 @@ class Imfresh():
             elif datetime.now() > self.next_time - timedelta(minutes=20) and datetime.now() < self.next_time:
                 self.sensor_library.collect_data()
             elif datetime.now() > self.next_time and datetime.now() < self.next_time + timedelta(hours=self.measurement_interval):
+                print("Starting data collection...")
                 (dc1, voc, dc2, humidity, temperature, errval) = self.sensor_library.collect_data()
                 if(errval == 0):
                     voc = 50 if voc > 50 else voc
                     self.record_data(voc, humidity, temperature, datetime.now(), "PeriodicTemp")
                 else:
-                    print("Error: " + str(errval))
+                    logging.error("ERROR {} - in periodic data collection at {}.", str(errval), datetime.now())
             else:
                 voc_avg, humidity_avg, temperature_avg = self.average_data("PeriodicTemp")
                 if(voc_avg or humidity_avg or temperature_avg):
@@ -141,6 +150,7 @@ class Imfresh():
 
     def realtime(self):
     # Conduct realtime measurements
+        print("Starting realtime loop...")
         datapoint = 0
         while self.do_real_time:
             if(datapoint == 5):
@@ -153,7 +163,7 @@ class Imfresh():
                 self.record_data(voc, humidity, temperature, datetime.now(), "RealTimeTemp")
                 datapoint += 1
             else:
-                print("Error: " + str(errval))
+                logging.error("ERROR {} - in realtime data collection at {}.", str(errval), datetime.now())
         self.measuring_real_time = False
 
     def mqtt_send_data(self, voc, humidity, temperature, timestamp, type_data):
@@ -168,6 +178,7 @@ class Imfresh():
             "VOC": voc,
         }
         self.client.publish(self.id + "/data", json.dumps(data_message))
+        print("Sent data to MQTT broker")
 
     def mqtt_on_connect(self, client, userdata, flags, rc):
     # Callback for when the client connects to the broker
@@ -181,6 +192,7 @@ class Imfresh():
     # Callback for when a message is received
         m_decode = str(message.payload.decode("utf-8","ignore"))
         try:
+            print("Received Settings Message")
             m_in = json.loads(m_decode)
             self.id = m_in["deviceId"]
             self.device_name = m_in["deviceName"]
@@ -194,7 +206,18 @@ class Imfresh():
             self.cleanliness_threshold = m_in["cleanlinessThreshold"]
             self.save_config()
         except ValueError:
-            print("The message was not a valid JSON")
+            print("Received Command")
+            if m_decode == "ErrorLog":
+                # Need to handle request
+                pass
+            elif m_decode == "Washed":
+                # Need to handle command
+                pass
+            elif m_decode.split()[0] == "PeriodicLog":
+                # Need to handle command
+                pass
+            else:
+                print("Invalid Command Received")
         
     def mqtt_client(self):
     # Connect as client to the MQTT broker and start listening
@@ -221,6 +244,7 @@ class Imfresh():
             if(self.alarm_status):
                 if(datetime.now().day == self.wash_day.day):
                     if(datetime.now().time > self.alarm_time and datetime.now().time < self.alarm_time + timedelta(minutes=5)):
+                        print("Activating alarm...")
                         self.alarm_library.buzz()
             
             # TODO: Use algorithm to produce data
