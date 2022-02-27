@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imfresh/models/settings.dart';
+import 'package:imfresh/services/mqttHander.dart';
 import 'package:imfresh/services/shared_prefs_handler.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 
 class DeviceSettingsCard extends StatefulWidget {
   final Settings initalSettings;
@@ -142,14 +144,14 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
                     });
               },
             ),
-          // SwitchListTile(
-          //   title: const Text('Realtime Measurement Setting'),
-          //   subtitle: const Text(
-          //       'Enables or disables realtime measurement when app is open'),
-          //   value: _settings.realtimeMeasuringOn,
-          //   onChanged: (status) => setState(() =>
-          //       _settings = _settings.copyWith(realtimeMeasuringOn: status)),
-          // ),
+          SwitchListTile(
+            title: const Text('Realtime Measurement Setting'),
+            subtitle: const Text(
+                'Enables or disables realtime measurement when app is open'),
+            value: _settings.realtimeMeasuringOn,
+            onChanged: (status) => setState(() =>
+                _settings = _settings.copyWith(realtimeMeasuringOn: status)),
+          ),
           SwitchListTile(
             title: const Text('Periodic Measurement Setting'),
             subtitle: const Text('Enables or disables periodic measurements'),
@@ -208,12 +210,13 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
                       child: const Text('Yes'),
                       isDestructiveAction: true,
                       onPressed: () {
+                        removeDevice(widget.initalSettings.deviceId);
                         Navigator.pop(context);
                       },
                     )
                   ],
                 ),
-              );
+              ).then((value) => setState(() {}));
             },
             child: const Text(
               'Reset device and delete all data',
@@ -230,6 +233,9 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
   @override
   void dispose() {
     updateDeviceSettings(widget.initalSettings.deviceId, _settings);
+    if (client.connectionStatus!.state == MqttConnectionState.connected) {
+      publishSettingsMessage(widget.initalSettings.deviceId, _settings);
+    }
     super.dispose();
   }
 

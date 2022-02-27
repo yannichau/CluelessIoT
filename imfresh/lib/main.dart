@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:imfresh/features/home_page.dart';
 import 'package:imfresh/features/new_device.dart';
 import 'package:imfresh/services/databaseHandler.dart';
+import 'package:imfresh/services/mqttHander.dart';
 
 import 'features/settings_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   dbHandler.openDB();
+  setupMqttClient();
   runApp(const App());
 }
 

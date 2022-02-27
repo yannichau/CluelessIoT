@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:imfresh/services/mqttHander.dart';
 import 'package:imfresh/services/shared_prefs_handler.dart';
 import 'package:imfresh/services/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     test();
+    connectClient();
     super.initState();
   }
 
@@ -100,13 +102,15 @@ class _HomePageState extends State<HomePage> {
           // Navigator.pushNamed(context, '/addDevice');
           print("Adding new device");
           addNewDevice(Settings(
-              deviceId: getRandomString(32),
+              deviceId: "asu343ui41823jisdjajdio1jo2i",
               deviceName: "Bed 1",
               deviceLocation: "London",
               alarmOn: true,
               alarmTime: DateTime.now(),
-              realtimeMeasuringOn: true,
-              periodicMeasuringEnabled: false,
+              realtimeMeasuringOn: false,
+              periodicMeasuringEnabled: true,
+              periodicMeasuringTimePeriod: 10,
+              measuringTimes: [DateTime.now()],
               cleanlinessThreshold: 3));
           setState(() {});
         },
