@@ -41,3 +41,17 @@ void updateDeviceSettings(String deviceID, Settings newSettings) async {
   }
   await prefs.setString('deviceList', jsonEncode(current));
 }
+
+void removeDevice(String deviceID) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  final String? list = prefs.getString('deviceList');
+  List<Settings> current = jsonDecode(list!)
+      .map<Settings>((json) => Settings.fromJson(json))
+      .toList();
+  for (int i = 0; i < current.length; i++) {
+    if (current[i].deviceId == deviceID) {
+      current.removeAt(i);
+    }
+  }
+  await prefs.setString('deviceList', jsonEncode(current));
+}

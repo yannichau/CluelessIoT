@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:imfresh/models/periodic_reading.dart';
 import 'package:imfresh/models/settings.dart';
+import 'package:imfresh/services/mqttHander.dart';
 import 'package:imfresh/services/weather_handler.dart';
 import 'package:intl/intl.dart';
+import 'package:mqtt_client/mqtt_client.dart';
 import 'package:weather/weather.dart';
 
 class HomeDeviceCard extends StatefulWidget {
@@ -16,10 +20,10 @@ class HomeDeviceCard extends StatefulWidget {
 
 class _HomeDeviceCardState extends State<HomeDeviceCard>
     with SingleTickerProviderStateMixin {
-  final PeriodicReading _reading = PeriodicReading(
-    nextWash: DateTime.now().add(Duration(days: 7)),
+  PeriodicReading reading = PeriodicReading(
+    nextWash: DateTime.now().add(Duration(days: 10)),
     timestamp: DateTime.now(),
-    deviceID: "askdfjhdsklfhjkjasdhfjlsk",
+    deviceID: "",
     humidity: 56,
     temperature: 11,
     VOC: 1,
@@ -47,6 +51,42 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
       ..addListener(() {
         setState(() {});
       });
+    if (client.connectionStatus!.state == MqttConnectionState.connected) {
+      subscribeToDeviceTopics(widget.settings.deviceId);
+      client.published!.listen((MqttPublishMessage message) {
+        print(
+            'EXAMPLE::Published notification:: topic is ${message.variableHeader!.topicName}, with Qos ${message.header!.qos}');
+      });
+      publishSettingsMessage(widget.settings.deviceId, widget.settings);
+    }
+    client.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
+      final recMess = c![0].payload as MqttPublishMessage;
+      final pt =
+          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+
+      final data = jsonDecode(pt);
+      print(data);
+      if (c[0].topic.contains("data")) {
+        setState(() {
+          reading = reading.copyWith(
+            humidity: data["humidity"],
+            temperature: data["temperature"],
+            VOC: data["VOC"],
+            //timestamp: DateTime.parse(data["timestamp"]),
+            //nextWash: DateTime.parse(data["nextWash"]),
+          );
+        });
+      }
+
+      /// The above may seem a little convoluted for users only interested in the
+      /// payload, some users however may be interested in the received publish message,
+      /// lets not constrain ourselves yet until the package has been in the wild
+      /// for a while.
+      /// The payload is a byte buffer, this will be specific to the topic
+      // print(
+      //     'EXAMPLE::Change notification:: topic is <${c[0].topic}>, payload is <-- $pt -->');
+      // print('');
+    });
     super.initState();
   }
 
@@ -96,7 +136,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                     alignment: Alignment.center,
                     width: 60,
                     height: 60,
-                    child: Text(_reading.VOC.toString() + " ppm"),
+                    child: Text(reading.VOC.toStringAsFixed(2) + "ppm"),
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Color.fromARGB(255, 255, 255, 255),
@@ -113,7 +153,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                     alignment: Alignment.center,
                     width: 60,
                     height: 60,
-                    child: Text(_reading.temperature.toString() + "°C"),
+                    child: Text(reading.temperature.toStringAsFixed(2) + "°C"),
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Color.fromARGB(255, 255, 255, 255),
@@ -130,7 +170,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                     alignment: Alignment.center,
                     width: 60,
                     height: 60,
-                    child: Text(_reading.humidity.toString() + "%"),
+                    child: Text(reading.humidity.toStringAsFixed(2) + "%"),
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Color.fromARGB(255, 255, 255, 255),
@@ -153,7 +193,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     "Suggested Next Wash Date: " +
-                        DateFormat('MMMMEEEEd').format(_reading.nextWash),
+                        DateFormat('MMMMEEEEd').format(reading.nextWash),
                     maxLines: 3,
                   ),
                 ),
