@@ -1,5 +1,6 @@
 from time import sleep
 from Middleman.SensorLibrary import Middleman
+from Alarm.Alarm_Library import Alarm
 import paho.mqtt.client as mqtt
 from datetime import datetime, timedelta
 import sqlite3
@@ -35,6 +36,7 @@ class Imfresh():
         self.load_config()
         # Initialise library
         self.sensor_library = Middleman()
+        self.alarm_library = Alarm()
         # Initialise MQTT Client
         self.client = mqtt.Client("", True, None, mqtt.MQTTv31)
         # Initialise database
@@ -216,6 +218,10 @@ class Imfresh():
                 self.realtime()
                 realtimethread = threading.Thread(target=self.realtime)
                 realtimethread.start()
+            if(self.alarm_status):
+                if(datetime.now().day == self.wash_day.day):
+                    if(datetime.now().time > self.alarm_time and datetime.now().time < self.alarm_time + timedelta(minutes=5)):
+                        self.alarm_library.buzz()
             
             # TODO: Use algorithm to produce data
             # TODO: Use MQTT to send periodic data to the server
