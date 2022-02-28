@@ -123,7 +123,7 @@ class Imfresh():
         return (voc, humidity, temperature)
 
     def update_wash_day(self):
-        # Update wash day
+    # Calculate and update wash day
         self.data_con = sqlite3.connect('data.sqlite')
         data_cursor = self.data_con.cursor()
         periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", self.prev_wash_day.isoformat())).fetchall()
@@ -287,7 +287,6 @@ class Imfresh():
                 self.update_wash_day()
                 wash_day_count = 0
             wash_day_count += 1
-            # TODO: Use algorithm to produce data
              
 # Main Loop
 def main():
