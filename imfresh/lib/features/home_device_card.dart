@@ -2,8 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imfresh/models/periodic_reading.dart';
+import 'package:imfresh/models/device_reading.dart';
 import 'package:imfresh/models/settings.dart';
+import 'package:imfresh/services/databaseHandler.dart';
 import 'package:imfresh/services/mqttHander.dart';
 import 'package:imfresh/services/weather_handler.dart';
 import 'package:intl/intl.dart';
@@ -20,18 +21,10 @@ class HomeDeviceCard extends StatefulWidget {
 
 class _HomeDeviceCardState extends State<HomeDeviceCard>
     with SingleTickerProviderStateMixin {
-  PeriodicReading reading = PeriodicReading(
-    nextWash: DateTime.now().add(Duration(days: 10)),
-    timestamp: DateTime.now(),
-    deviceID: "",
-    humidity: 56,
-    temperature: 11,
-    VOC: 1,
-  );
-
   late AnimationController _animationController;
   late Animation _animation;
   WeatherFactory wf = WeatherFactory("5017664c335a080c262ee52428445459");
+  bool realtimeMeasurementOn = true;
 
   final List<int> testWeatherStatus = [500, 731, 804, 903, 321];
   final List<DateTime> testWeatherTimestamps = [
@@ -57,36 +50,9 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
         print(
             'EXAMPLE::Published notification:: topic is ${message.variableHeader!.topicName}, with Qos ${message.header!.qos}');
       });
-      publishSettingsMessage(widget.settings.deviceId, widget.settings);
+      publishSettingsMessage(widget.settings.deviceId,
+          widget.settings.copyWith(realtimeMeasuringOn: true));
     }
-    client.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
-      final recMess = c![0].payload as MqttPublishMessage;
-      final pt =
-          MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-
-      final data = jsonDecode(pt);
-      print(data);
-      if (c[0].topic.contains("data")) {
-        setState(() {
-          reading = reading.copyWith(
-            humidity: data["humidity"],
-            temperature: data["temperature"],
-            VOC: data["VOC"],
-            //timestamp: DateTime.parse(data["timestamp"]),
-            //nextWash: DateTime.parse(data["nextWash"]),
-          );
-        });
-      }
-
-      /// The above may seem a little convoluted for users only interested in the
-      /// payload, some users however may be interested in the received publish message,
-      /// lets not constrain ourselves yet until the package has been in the wild
-      /// for a while.
-      /// The payload is a byte buffer, this will be specific to the topic
-      // print(
-      //     'EXAMPLE::Change notification:: topic is <${c[0].topic}>, payload is <-- $pt -->');
-      // print('');
-    });
     super.initState();
   }
 
@@ -103,7 +69,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
           Row(
             children: [
               Expanded(
-                flex: 3,
+                flex: 4,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
@@ -111,6 +77,43 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                     style: GoogleFonts.racingSansOne(fontSize: 28.0),
                   ),
                 ),
+              ),
+              Expanded(
+                child: Container(
+                    height: 50,
+                    child: realtimeMeasurementOn
+                        ? TextButton(
+                            //tooltip: "View History",
+                            onPressed: () {
+                              publishSettingsMessage(
+                                  widget.settings.deviceId,
+                                  widget.settings
+                                      .copyWith(realtimeMeasuringOn: false));
+                              setState(() {
+                                realtimeMeasurementOn = false;
+                              });
+                            },
+                            child: const Icon(
+                              Icons.stop,
+                              color: Colors.black,
+                            ),
+                          )
+                        : TextButton(
+                            //tooltip: "View History",
+                            onPressed: () {
+                              publishSettingsMessage(
+                                  widget.settings.deviceId,
+                                  widget.settings
+                                      .copyWith(realtimeMeasuringOn: true));
+                              setState(() {
+                                realtimeMeasurementOn = true;
+                              });
+                            },
+                            child: const Icon(
+                              Icons.play_arrow,
+                              color: Colors.black,
+                            ),
+                          )),
               ),
               Expanded(
                 child: Container(
@@ -127,87 +130,130 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
               )
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8.0, 20.0, 8.0, 20.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    alignment: Alignment.center,
-                    width: 60,
-                    height: 60,
-                    child: Text(reading.VOC.toStringAsFixed(2) + "ppm"),
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Color.fromARGB(134, 153, 237, 58),
-                              blurRadius: _animation.value,
-                              spreadRadius: _animation.value)
-                        ]),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    alignment: Alignment.center,
-                    width: 60,
-                    height: 60,
-                    child: Text(reading.temperature.toStringAsFixed(2) + "°C"),
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Color.fromARGB(130, 32, 215, 240),
-                              blurRadius: _animation.value,
-                              spreadRadius: _animation.value)
-                        ]),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    alignment: Alignment.center,
-                    width: 60,
-                    height: 60,
-                    child: Text(reading.humidity.toStringAsFixed(2) + "%"),
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Color.fromARGB(130, 238, 15, 34),
-                              blurRadius: _animation.value,
-                              spreadRadius: _animation.value)
-                        ]),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Suggested Next Wash Date: " +
-                        DateFormat('MMMMEEEEd').format(reading.nextWash),
-                    maxLines: 3,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: TextButton(
-                    child: const Text(
-                      "I'm Done Washing!",
-                      textAlign: TextAlign.center,
-                    ),
-                    onPressed: () {}),
-              ),
-            ],
-          ),
+          StreamBuilder<List<MqttReceivedMessage<MqttMessage>>>(
+              stream: client.updates!.where((event) =>
+                  event[0].topic.contains(widget.settings.deviceId + "/data")),
+              builder: (BuildContext context,
+                  AsyncSnapshot<List<MqttReceivedMessage<MqttMessage>>>
+                      snapshot) {
+                if (snapshot.hasData) {
+                  final recMess =
+                      snapshot.data![0].payload as MqttPublishMessage;
+                  final pt = MqttPublishPayload.bytesToStringAsString(
+                      recMess.payload.message);
+
+                  final DeviceReading data =
+                      DeviceReading.fromJson(jsonDecode(pt));
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding:
+                            const EdgeInsets.fromLTRB(8.0, 20.0, 8.0, 20.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                width: 60,
+                                height: 60,
+                                child:
+                                    Text(data.VOC.toStringAsFixed(0) + "ppm"),
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color.fromARGB(255, 255, 255, 255),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color:
+                                              Color.fromARGB(134, 153, 237, 58),
+                                          blurRadius: _animation.value,
+                                          spreadRadius: _animation.value)
+                                    ]),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                width: 60,
+                                height: 60,
+                                child: Text(
+                                    data.temperature.toStringAsFixed(2) + "°C"),
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color.fromARGB(255, 255, 255, 255),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color:
+                                              Color.fromARGB(130, 32, 215, 240),
+                                          blurRadius: _animation.value,
+                                          spreadRadius: _animation.value)
+                                    ]),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                alignment: Alignment.center,
+                                width: 60,
+                                height: 60,
+                                child: Text(
+                                    data.humidity.toStringAsFixed(2) + "%"),
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color.fromARGB(255, 255, 255, 255),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color:
+                                              Color.fromARGB(130, 238, 15, 34),
+                                          blurRadius: _animation.value,
+                                          spreadRadius: _animation.value)
+                                    ]),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                "Suggested Next Wash Date: " +
+                                    DateFormat('MMMMEEEEd')
+                                        .format(data.nextWash),
+                                maxLines: 3,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: TextButton(
+                                child: const Text(
+                                  "I'm Done Washing!",
+                                  textAlign: TextAlign.center,
+                                ),
+                                onPressed: () {
+                                  publishWashedMessage(
+                                      widget.settings.deviceId);
+                                }),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                } else if (snapshot.hasError) {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                        "Can't currently connect to device, please try again later"),
+                  );
+                } else {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              }),
           Container(
             padding: EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
             height: 90,

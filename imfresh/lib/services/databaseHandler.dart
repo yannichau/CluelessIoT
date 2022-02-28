@@ -1,10 +1,16 @@
 library database_handler;
 
+import 'package:imfresh/models/device_reading.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:imfresh/models/periodic_reading.dart';
 
 final DatabaseHandler dbHandler = DatabaseHandler._privateConstructor();
+
+Map<String, dynamic> readingToMap(DeviceReading reading) {
+  final temp = reading.toJson();
+  temp["id"] = reading.deviceId + reading.timestamp.toIso8601String();
+  return temp;
+}
 
 class DatabaseHandler {
   // Singleton Instance
@@ -32,7 +38,7 @@ class DatabaseHandler {
     );
   }
 
-  Future<int> insertReadings(List<PeriodicReading> readings) async {
+  Future<int> insertReadings(List<DeviceReading> readings) async {
     print("Number of readings to be inserted: " + readings.length.toString());
     int result = 0;
     final Database db = await initializeDB();
@@ -43,18 +49,18 @@ class DatabaseHandler {
     return result;
   }
 
-  Future<List<PeriodicReading>> getReadings() async {
+  Future<List<DeviceReading>> getReadings() async {
     final Database db = await openDB();
     final List<Map<String, Object?>> queryResult =
         await db.query('periodicReadings', orderBy: "date DESC");
-    return queryResult.map((e) => PeriodicReading.fromJson(e)).toList();
+    return queryResult.map((e) => DeviceReading.fromJson(e)).toList();
   }
 
-  Future<List<PeriodicReading>> getLastReading({int number = 1}) async {
+  Future<List<DeviceReading>> getLastReading({int number = 1}) async {
     final Database db = await openDB();
     final List<Map<String, Object?>> queryResult =
         await db.query('periodicReadings', orderBy: "date DESC", limit: number);
-    return queryResult.map((e) => PeriodicReading.fromJson(e)).toList();
+    return queryResult.map((e) => DeviceReading.fromJson(e)).toList();
   }
 
   Future<void> deleteReading(String timestamp) async {

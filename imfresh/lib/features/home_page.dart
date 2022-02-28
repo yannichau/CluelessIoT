@@ -25,7 +25,7 @@ class _HomePageState extends State<HomePage> {
 
   void test() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('deviceList');
+    // await prefs.remove('deviceList');
     print((await getDeviceList()).toString());
   }
 

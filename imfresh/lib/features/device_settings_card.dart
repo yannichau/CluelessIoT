@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imfresh/models/settings.dart';
@@ -18,13 +21,20 @@ class DeviceSettingsCard extends StatefulWidget {
 class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
   late Settings _settings;
   final TextEditingController _textFieldController = TextEditingController();
+  late Directory tempDir;
+
   String valueText = "";
 
   @override
   void initState() {
     _settings = widget.initalSettings;
     valueText = _settings.deviceName;
+    getTempDir();
     super.initState();
+  }
+
+  void getTempDir() async {
+    tempDir = await getTemporaryDirectory();
   }
 
   @override
@@ -144,14 +154,14 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
                     });
               },
             ),
-          SwitchListTile(
-            title: const Text('Realtime Measurement Setting'),
-            subtitle: const Text(
-                'Enables or disables realtime measurement when app is open'),
-            value: _settings.realtimeMeasuringOn,
-            onChanged: (status) => setState(() =>
-                _settings = _settings.copyWith(realtimeMeasuringOn: status)),
-          ),
+          // SwitchListTile(
+          //   title: const Text('Realtime Measurement Setting'),
+          //   subtitle: const Text(
+          //       'Enables or disables realtime measurement when app is open'),
+          //   value: _settings.realtimeMeasuringOn,
+          //   onChanged: (status) => setState(() =>
+          //       _settings = _settings.copyWith(realtimeMeasuringOn: status)),
+          // ),
           SwitchListTile(
             title: const Text('Periodic Measurement Setting'),
             subtitle: const Text('Enables or disables periodic measurements'),
@@ -190,6 +200,73 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
                 style: TextStyle(
                   color: Colors.blue,
                 )),
+          ),
+          TextButton(
+            onPressed: () {
+              showCupertinoDialog<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  client.subscribe(
+                      _settings.deviceId + "/errorLog", MqttQos.exactlyOnce);
+                  publishErrorLogMessage(_settings.deviceId);
+                  return CupertinoAlertDialog(
+                    title: Text('Get Error Log for ${_settings.deviceName}'),
+                    content:
+                        StreamBuilder<List<MqttReceivedMessage<MqttMessage>>>(
+                      stream: client.updates!.where((event) => event[0]
+                          .topic
+                          .contains(_settings.deviceId + "/errorLog")),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<List<MqttReceivedMessage<MqttMessage>>>
+                              snapshot) {
+                        if (snapshot.hasData) {
+                          final recMess =
+                              snapshot.data![0].payload as MqttPublishMessage;
+                          final pt = MqttPublishPayload.bytesToString(
+                              recMess.payload.message);
+
+                          List<String> dataAsList = pt.split("><");
+                          dataAsList[0] = dataAsList[0].substring(1);
+                          dataAsList.last = dataAsList.last
+                              .substring(0, dataAsList.last.length - 1);
+
+                          var logFile = File(tempDir.path + "/ErrorLog.bin");
+
+                          logFile
+                              .writeAsBytes(dataAsList.map(int.parse).toList());
+
+                          return TextButton(
+                              onPressed: () => Share.shareFiles(
+                                  [tempDir.path + "/ErrorLog.bin"]),
+                              child: Text("Share Logfile"));
+                        } else {
+                          return Column(
+                            children: [
+                              Text("Data Request Sent..."),
+                              CircularProgressIndicator(),
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                    actions: <CupertinoDialogAction>[
+                      CupertinoDialogAction(
+                        child: const Text('Close'),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            child: const Text(
+              'Get Device Logs',
+              style: TextStyle(
+                color: Colors.orange,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {

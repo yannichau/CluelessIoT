@@ -59,6 +59,18 @@ void publishSettingsMessage(String deviceID, Settings setting) {
   client.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
 }
 
+void publishWashedMessage(String deviceID) {
+  String topic = deviceID + "/settings";
+  final builder = MqttClientPayloadBuilder()..addString("Washed");
+  client.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
+}
+
+void publishErrorLogMessage(String deviceID) {
+  String topic = deviceID + "/settings";
+  final builder = MqttClientPayloadBuilder()..addString("ErrorLog");
+  client.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
+}
+
 void unsubscribe(String topic) {
   client.unsubscribe(topic);
 }
