@@ -8,6 +8,7 @@ import yaml
 import json
 import threading
 import logging
+import math
 
 class Imfresh():
     # Address to communicate through MQTT. These must be set beforehand
@@ -31,6 +32,7 @@ class Imfresh():
         self.cleanliness_threshold = 1
         # Other Variables
         self.wash_day = datetime.fromisoformat('2022-02-28T12:00:00')
+        self.prev_wash_day = datetime.fromisoformat('2022-02-28T12:00:00')
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
         # Load current settings from config.yaml
@@ -68,6 +70,7 @@ class Imfresh():
             self.measurement_interval = config["periodicMeasurementTimePeriod"] # int
             self.measurement_times = [datetime.fromisoformat(time) for time in config["periodicMeasurementTimes"]] # list of strings
             self.wash_day = datetime.fromisoformat(config["washDay"]) # string
+            self.prev_wash_day = datetime.fromisoformat(config["prevWashDay"]) # string
 
     def save_config(self):
     # Save configuration to config.yaml
@@ -84,6 +87,7 @@ class Imfresh():
             config["periodicMeasurementTimePeriod"] = self.measurement_interval # int
             config["periodicMeasurementTimes"] = [time.isoformat() for time in self.measurement_times] # list of strings
             config["washDay"] = self.wash_day.isoformat() # string
+            config["prevWashDay"] = self.prev_wash_day.isoformat() # string
             yaml.dump(config, file)
 
     def record_data(self, voc, humidity, temperature, time, type_data):
@@ -117,6 +121,30 @@ class Imfresh():
             self.data_con.commit()
             self.data_con.close()
         return (voc, humidity, temperature)
+
+    def update_wash_day(self):
+        # Update wash day
+        self.data_con = sqlite3.connect('data.sqlite')
+        data_cursor = self.data_con.cursor()
+        periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", self.prev_wash_day.isoformat())).fetchall()
+        self.data_con.close()
+        avg_humidity = 0
+        avg_temperature = 0
+        avg_voc = 0
+        fst_voc = periodic_data[0][1]
+        for row in periodic_data:
+            avg_humidity += row[2]
+            avg_temperature += row[3]
+            avg_voc += row[1]
+        avg_humidity = avg_humidity / len(periodic_data)
+        avg_temperature = avg_temperature / len(periodic_data)
+        avg_voc = avg_voc / len(periodic_data)
+        if(avg_voc > fst_voc):
+            eq1 = math.floor(self.cleanliness_threshold/(fst_voc - avg_voc))
+            eq2 = math.floor((avg_humidity/200 + avg_temperature/40) * 10)
+        self.wash_day = self.prev_wash_day + timedelta(days=min(eq1, eq2, 10))
+        if self.wash_day < datetime.now():
+            self.wash_day = datetime.now()
 
     def periodic(self):
     # Conduct periodic measurements
@@ -153,7 +181,7 @@ class Imfresh():
         print("Starting realtime loop...")
         start_time = datetime.now()
         datapoint = 0
-        while self.do_real_time and datetime.now() < self.start_time + timedelta(minutes=15):
+        while self.do_real_time and datetime.now() < start_time + timedelta(minutes=15):
             if(datapoint == 5):
                 datapoint = 0
                 voc_avg, humidity_avg, temperature_avg = self.average_data("RealTimeTemp")
@@ -212,18 +240,18 @@ class Imfresh():
                 file = open("Error.log", "rb")
                 error_log = file.read()
                 byte_array = bytes(error_log)
-                client.publish("self.id" + "/data", "ErrorLog")
-                client.publish("self.id" + "/data", byte_array)
+                client.publish("self.id" + "/error", byte_array)
             elif m_decode == "Washed":
-                # Need to handle command
-                pass
+                self.prev_wash_day = datetime.now()
+                self.update_wash_day()
+                self.save_config()
             elif m_decode.split()[0] == "PeriodicLog":
                 self.data_con = sqlite3.connect('data.sqlite')
                 data_cursor = self.data_con.cursor()
                 periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", m_decode.split()[1])).fetchall()
                 self.data_con.close()
-                periodic_jsons = [{"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]} for row in periodic_data]
-                client.publish("self.id" + "/data", json.dumps(periodic_jsons))
+                periodic_jsons = [json.dumps({"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]}) for row in periodic_data]
+                self.client.publish("self.id" + "/data", periodic_jsons)
             else:
                 print("Invalid Command Received")
         
@@ -239,6 +267,7 @@ class Imfresh():
     def activate(self):
     # Activate main loop for device
         self.mqtt_client()
+        wash_day_count = 0
         while True:
             if(self.do_periodic and not self.measuring_periodic):
                 self.measuring_periodic = True
@@ -254,7 +283,10 @@ class Imfresh():
                     if(datetime.now().time > self.alarm_time and datetime.now().time < self.alarm_time + timedelta(minutes=5)):
                         print("Activating alarm...")
                         self.alarm_library.buzz()
-            
+            if(wash_day_count == 50):
+                self.update_wash_day()
+                wash_day_count = 0
+            wash_day_count += 1
             # TODO: Use algorithm to produce data
              
 # Main Loop
