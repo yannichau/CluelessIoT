@@ -43,7 +43,7 @@ class Imfresh():
         self.alarm_library = Alarm()
         # Initialise Logging
         logging.basicConfig(filename='Error.log', level=logging.DEBUG)
-        logging.info(f"INFO - Started Session at {datetime.now()}.")
+        logging.info(f"INFO - Started Session at {datetime.now().isoformat()}.")
         # Initialise MQTT Client
         self.client = mqtt.Client("", True, None, mqtt.MQTTv31)
         # Initialise database
@@ -170,7 +170,7 @@ class Imfresh():
                     voc = 50 if voc > 50 else voc
                     self.record_data(voc, humidity, temperature, datetime.now(), "PeriodicTemp")
                 else:
-                    logging.error(f"ERROR {str(errval)} - in periodic data collection at {datetime.now()}.")
+                    logging.error(f"ERROR {str(errval)} - in periodic data collection at {datetime.now().isoformat()}.")
             else:
                 voc_avg, humidity_avg, temperature_avg = self.average_data("PeriodicTemp")
                 if(voc_avg or humidity_avg or temperature_avg):
@@ -193,7 +193,7 @@ class Imfresh():
                 self.record_data(voc, humidity, temperature, datetime.now(), "RealTimeTemp")
                 datapoint += 1
             else:
-                logging.error(f"ERROR {str(errval)} - in realtime data collection at {datetime.now()}.")
+                logging.error(f"ERROR {str(errval)} - in realtime data collection at {datetime.now().isoformat()}.")
         self.measuring_real_time = False
 
     def mqtt_send_data(self, voc, humidity, temperature, timestamp, type_data):
