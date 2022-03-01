@@ -12,7 +12,7 @@ import math
 
 class Imfresh():
     # Address to communicate through MQTT. These must be set beforehand
-    IP_ADDRESS = "54.174.95.180"
+    IP_ADDRESS = "3.83.201.2380"
     PORT = 1883
 
     def __init__(self):
@@ -149,8 +149,8 @@ class Imfresh():
 
     def periodic(self):
     # Conduct periodic measurements
+        print("Starting periodic loop...")
         while self.do_periodic:
-            print("Starting periodic loop...")
             if datetime.now() > self.next_time + timedelta(hours=self.measurement_interval):
                 no_time_available = True
                 for new_time in self.measurement_times:
