@@ -47,11 +47,11 @@ class Imfresh():
         # Initialise MQTT Client
         self.client = mqtt.Client("", True, None, mqtt.MQTTv31)
         # Initialise database
-        self.data_con = sqlite3.connect('data.sqlite')
-        data_cursor = self.data_con.cursor()
+        data_con = sqlite3.connect('data.sqlite')
+        data_cursor = data_con.cursor()
         data_cursor.execute("CREATE TABLE IF NOT EXISTS ImFreshData (time TIME, voc REAL, humidity REAL, temperature REAL, type TEXT)")
-        self.data_con.commit()
-        self.data_con.close()
+        data_con.commit()
+        data_con.close()
         # Activate main loop for device
         print("Successfully initialised Imfresh Device!")
         self.activate()
@@ -94,22 +94,22 @@ class Imfresh():
     def record_data(self, voc, humidity, temperature, time, type_data):
     # Record data to database
         current_stamp = time.isoformat()
-        self.data_con = sqlite3.connect('data.sqlite')
-        data_cursor = self.data_con.cursor()
+        data_con = sqlite3.connect('data.sqlite')
+        data_cursor = data_con.cursor()
         data_cursor.execute("INSERT INTO ImFreshData VALUES(?, ?, ?, ?, ?)", (current_stamp, voc, humidity, temperature, type_data))
-        self.data_con.commit()
-        self.data_con.close()
+        data_con.commit()
+        data_con.close()
 
     def average_data(self, type_data):
     # Calculate average data from temporary database values
-        self.data_con = sqlite3.connect('data.sqlite')
-        data_cursor = self.data_con.cursor()
+        data_con = sqlite3.connect('data.sqlite')
+        data_cursor = data_con.cursor()
         voc = 0
         humidity = 0
         temperature = 0
         temp_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ?", (type_data,)).fetchall()
         if len(temp_data) == 0:
-            self.data_con.close()
+            data_con.close()
         else:
             for row in temp_data:
                 voc += row[1]
@@ -119,16 +119,16 @@ class Imfresh():
             humidity = humidity / len(temp_data)
             temperature = temperature / len(temp_data)
             data_cursor.execute("DELETE FROM ImFreshData WHERE type = ?", (type_data,))
-            self.data_con.commit()
-            self.data_con.close()
+            data_con.commit()
+            data_con.close()
         return (voc, humidity, temperature)
 
     def update_wash_day(self):
     # Calculate and update wash day
-        self.data_con = sqlite3.connect('data.sqlite')
-        data_cursor = self.data_con.cursor()
+        data_con = sqlite3.connect('data.sqlite')
+        data_cursor = data_con.cursor()
         periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", self.prev_wash_day.isoformat())).fetchall()
-        self.data_con.close()
+        data_con.close()
         if len(periodic_data) == 0:
             self.wash_day = datetime.now()
         else:
@@ -250,10 +250,10 @@ class Imfresh():
                 self.prev_wash_day = datetime.now()
                 self.save_config()
             elif m_decode.split()[0] == "PeriodicLog":
-                self.data_con = sqlite3.connect('data.sqlite')
-                data_cursor = self.data_con.cursor()
+                data_con = sqlite3.connect('data.sqlite')
+                data_cursor = data_con.cursor()
                 periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", m_decode.split()[1])).fetchall()
-                self.data_con.close()
+                data_con.close()
                 if len(periodic_data) != 0:
                     periodic_jsons = [json.dumps({"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]}) for row in periodic_data]
                     self.client.publish("self.id" + "/data", periodic_jsons)
