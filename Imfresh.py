@@ -243,7 +243,7 @@ class Imfresh():
             self.do_real_time = m_in["realtimeMeasuringOn"]
             self.do_periodic = m_in["periodicMeasuringEnabled"]
             self.measurement_interval = m_in["periodicMeasuringTimePeriod"]
-            self.measurement_times = [datetime.fromisoformat(time) for time in m_in["measuringTimes"]]
+            self.measurement_times = [datetime.fromisoformat(time) for time in m_in["measuringTimes"]].sort()
             self.cleanliness_threshold = m_in["cleanlinessThreshold"]
             self.save_config()
         except ValueError:
