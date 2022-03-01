@@ -23,7 +23,7 @@ class DatabaseHandler {
       path,
       onCreate: (db, version) {
         db.execute(
-          'CREATE TABLE periodicReadings(timestamp TEXT PRIMARY KEY, deviceID TEXT, nextWash TEXT, humidity REAL, temperature REAL, airQuality REAL, cleanlinessScore INTEGER)',
+          'CREATE TABLE periodicReadings(id TEXT PRIMARY KEY, type TEXT, timestamp TEXT,  nextWash TEXT, deviceId TEXT, humidity REAL, temperature REAL, VOC REAL)',
         );
       },
       version: 1,
@@ -43,7 +43,7 @@ class DatabaseHandler {
     int result = 0;
     final Database db = await initializeDB();
     for (var reading in readings) {
-      result = await db.insert('periodicReadings', reading.toJson(),
+      result = await db.insert('periodicReadings', readingToMap(reading),
           conflictAlgorithm: ConflictAlgorithm.replace);
     }
     return result;
@@ -52,23 +52,38 @@ class DatabaseHandler {
   Future<List<DeviceReading>> getReadings() async {
     final Database db = await openDB();
     final List<Map<String, Object?>> queryResult =
-        await db.query('periodicReadings', orderBy: "date DESC");
+        await db.query('periodicReadings', orderBy: "timestamp DESC");
     return queryResult.map((e) => DeviceReading.fromJson(e)).toList();
   }
 
-  Future<List<DeviceReading>> getLastReading({int number = 1}) async {
+  Future<List<DeviceReading>> getReadingsByDevice(String deviceId) async {
     final Database db = await openDB();
-    final List<Map<String, Object?>> queryResult =
-        await db.query('periodicReadings', orderBy: "date DESC", limit: number);
+    final List<Map<String, Object?>> queryResult = await db.query(
+        'periodicReadings',
+        orderBy: "timestamp DESC",
+        where: "deviceId = ?",
+        whereArgs: [deviceId]);
     return queryResult.map((e) => DeviceReading.fromJson(e)).toList();
   }
 
-  Future<void> deleteReading(String timestamp) async {
+  Future<List<DeviceReading>> getLastReading(String deviceId,
+      {int number = 1}) async {
+    final Database db = await openDB();
+    final List<Map<String, Object?>> queryResult = await db.query(
+        'periodicReadings',
+        orderBy: "timestamp DESC",
+        limit: number,
+        where: "deviceId = ?",
+        whereArgs: [deviceId]);
+    return queryResult.map((e) => DeviceReading.fromJson(e)).toList();
+  }
+
+  Future<void> deleteReading(String id) async {
     final db = await openDB();
     await db.delete(
       'periodicReadings',
-      where: "timestamp = ?",
-      whereArgs: [timestamp],
+      where: "id = ?",
+      whereArgs: [id],
     );
   }
 }

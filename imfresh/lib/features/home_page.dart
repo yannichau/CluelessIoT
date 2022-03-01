@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:imfresh/services/mqttHander.dart';
+import 'package:imfresh/services/mqttHandler.dart';
 import 'package:imfresh/services/shared_prefs_handler.dart';
 import 'package:imfresh/services/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,7 +18,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   void initState() {
-    test();
+    // test();
     connectClient();
     super.initState();
   }
@@ -26,7 +26,6 @@ class _HomePageState extends State<HomePage> {
   void test() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     // await prefs.remove('deviceList');
-    print((await getDeviceList()).toString());
   }
 
   @override
@@ -98,23 +97,141 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigator.pushNamed(context, '/addDevice');
-          print("Adding new device");
-          addNewDevice(Settings(
-              deviceId: "asu343ui41823jisdjajdio1jo2i",
-              deviceName: "Bed 1",
-              deviceLocation: "London",
-              alarmOn: true,
-              alarmTime: DateTime.now(),
-              realtimeMeasuringOn: false,
-              periodicMeasuringEnabled: true,
-              periodicMeasuringTimePeriod: 10,
-              measuringTimes: [DateTime.now()],
-              cleanlinessThreshold: 3));
-          setState(() {});
+        onPressed: () async {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              final _keyForm = GlobalKey<FormState>();
+              final _id = TextEditingController();
+              final _name = TextEditingController();
+              final _location = TextEditingController();
+              String? newDeviceId = "";
+              String? deviceCity = "";
+              String? deviceName = "";
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  return Dialog(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: Center(
+                            child: Text(
+                              'Add New Device',
+                              style: Theme.of(context).textTheme.headline6,
+                            ),
+                          ),
+                        ),
+                        Form(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Expanded(
+                                        flex: 4,
+                                        child: TextFormField(
+                                          controller: _id,
+                                          enableSuggestions: false,
+                                          onSaved: (newVal) =>
+                                              newDeviceId = newVal,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Device ID',
+                                          ),
+                                          validator: (value) {
+                                            if (value!.isEmpty) {
+                                              return 'Please enter an ID';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: IconButton(
+                                            onPressed: () async {
+                                              final result =
+                                                  await Navigator.pushNamed(
+                                                      context, '/addDevice');
+
+                                              setState(() {
+                                                _id.text = "$result";
+                                              });
+                                            },
+                                            icon: Icon(
+                                                Icons.qr_code_scanner_sharp)),
+                                      ),
+                                    ],
+                                  ),
+                                  TextFormField(
+                                    controller: _name,
+                                    onSaved: (newVal) => deviceName = newVal,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Device Name',
+                                    ),
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return 'Please enter a name';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  TextFormField(
+                                    onSaved: (newVal) => deviceCity = newVal,
+                                    controller: _location,
+                                    decoration: const InputDecoration(
+                                      labelText: 'City Location',
+                                    ),
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return 'Please enter device city';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: const Text('ADD'),
+                                    onPressed: () {
+                                      if (_keyForm.currentState!.validate()) {
+                                        _keyForm.currentState!.save();
+                                        addNewDevice(
+                                          Settings(
+                                              deviceId: newDeviceId!,
+                                              deviceName: deviceName!,
+                                              alarmOn: true,
+                                              alarmTime: DateTime.now(),
+                                              deviceLocation: deviceCity!,
+                                              realtimeMeasuringOn: true,
+                                              periodicMeasuringTimePeriod: 1,
+                                              periodicMeasuringEnabled: true,
+                                              measuringTimes: getSchedule(
+                                                  ["01:00-1234567"]),
+                                              cleanlinessThreshold: 3),
+                                        );
+
+                                        Navigator.pop(context);
+                                      }
+                                    },
+                                  )
+                                ],
+                              ),
+                            ),
+                            key: _keyForm),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ).then((value) async {
+            await Future.delayed(Duration(seconds: 1));
+            setState(() {});
+          });
         },
-        tooltip: 'Increment',
+        tooltip: 'Add New Device',
         child: const Icon(Icons.add),
       ),
     );

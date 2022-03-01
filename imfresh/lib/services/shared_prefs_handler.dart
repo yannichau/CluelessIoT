@@ -24,6 +24,11 @@ void addNewDevice(Settings device) async {
   List<Settings> current = jsonDecode(list!)
       .map<Settings>((json) => Settings.fromJson(json))
       .toList();
+  current.forEach((element) {
+    if (element.deviceId == device.deviceId) {
+      throw Exception("Device already exists");
+    }
+  });
   current.add(device);
   await prefs.setString('deviceList', jsonEncode(current));
 }

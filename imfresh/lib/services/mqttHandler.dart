@@ -65,6 +65,13 @@ void publishWashedMessage(String deviceID) {
   client.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
 }
 
+void publishPeriodicDataRequest(String deviceID, DateTime lastUpdate) {
+  String topic = deviceID + "/settings";
+  final builder = MqttClientPayloadBuilder()
+    ..addString("PeriodicLog " + lastUpdate.toIso8601String());
+  client.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
+}
+
 void publishErrorLogMessage(String deviceID) {
   String topic = deviceID + "/settings";
   final builder = MqttClientPayloadBuilder()..addString("ErrorLog");
