@@ -36,7 +36,7 @@ class Imfresh():
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
         # Load current settings from config.yaml
-        self.save_config()
+        # self.save_config() # Uncomment to save default to file
         self.load_config()
         # Initialise library
         self.sensor_library = Middleman()
@@ -248,15 +248,15 @@ class Imfresh():
                 client.publish("self.id" + "/error", byte_array)
             elif m_decode == "Washed":
                 self.prev_wash_day = datetime.now()
-                self.update_wash_day()
                 self.save_config()
             elif m_decode.split()[0] == "PeriodicLog":
                 self.data_con = sqlite3.connect('data.sqlite')
                 data_cursor = self.data_con.cursor()
                 periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", m_decode.split()[1])).fetchall()
                 self.data_con.close()
-                periodic_jsons = [json.dumps({"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]}) for row in periodic_data]
-                self.client.publish("self.id" + "/data", periodic_jsons)
+                if len(periodic_data) != 0:
+                    periodic_jsons = [json.dumps({"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]}) for row in periodic_data]
+                    self.client.publish("self.id" + "/data", periodic_jsons)
             else:
                 print("Invalid Command Received")
         
