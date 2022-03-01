@@ -62,7 +62,8 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
               title: const Text('Device Location'),
               subtitle: Text('Current Location: ${_settings.deviceLocation}'),
               trailing: IconButton(
-                icon: const Icon(Icons.edit),
+                icon: const Icon(Icons.edit,
+                    semanticLabel: 'Edit Device Location'),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -313,8 +314,8 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
                     showCupertinoDialog<void>(
                       context: context,
                       builder: (BuildContext context) {
-                        client.subscribe(_settings.deviceId + "/errorLog",
-                            MqttQos.exactlyOnce);
+                        client.subscribe(
+                            _settings.deviceId + "/error", MqttQos.exactlyOnce);
                         publishErrorLogMessage(_settings.deviceId);
                         return CupertinoAlertDialog(
                           title:
@@ -323,7 +324,7 @@ class _DeviceSettingsCardState extends State<DeviceSettingsCard> {
                               List<MqttReceivedMessage<MqttMessage>>>(
                             stream: client.updates!.where((event) => event[0]
                                 .topic
-                                .contains(_settings.deviceId + "/errorLog")),
+                                .contains(_settings.deviceId + "/error")),
                             builder: (BuildContext context,
                                 AsyncSnapshot<
                                         List<MqttReceivedMessage<MqttMessage>>>

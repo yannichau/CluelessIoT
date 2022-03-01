@@ -145,6 +145,8 @@ class _HomePageState extends State<HomePage> {
                                       Expanded(
                                         flex: 1,
                                         child: IconButton(
+                                            tooltip:
+                                                "Scan QR Code for Device ID",
                                             onPressed: () async {
                                               final result =
                                                   await Navigator.pushNamed(

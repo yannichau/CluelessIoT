@@ -107,6 +107,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                             child: const Icon(
                               Icons.stop,
                               color: Colors.black,
+                              semanticLabel: "Stop Realtime Measurement",
                             ),
                           )
                         : TextButton(
@@ -123,6 +124,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                             child: const Icon(
                               Icons.play_arrow,
                               color: Colors.black,
+                              semanticLabel: "Start Realtime Measurement",
                             ),
                           )),
               ),
@@ -143,6 +145,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                     child: const Icon(
                       Icons.auto_graph_sharp,
                       color: Colors.black,
+                      semanticLabel: "View History",
                     ),
                   ),
                 ),
@@ -369,6 +372,8 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                               children: [
                                 Icon(
                                   iconMapping[displayedData[index]],
+                                  semanticLabel:
+                                      iconLabelling[displayedData[index]],
                                   size: 50,
                                 ),
                                 const Spacer(),

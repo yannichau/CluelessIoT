@@ -51,6 +51,7 @@ void subscribeToDeviceTopics(String deviceID) {
   const topic = "IC.embedded/cluelessIoT/imfresh/";
   client.subscribe(deviceID + "/data", MqttQos.exactlyOnce);
   client.subscribe(deviceID + "/settings", MqttQos.exactlyOnce);
+  client.subscribe(deviceID + "/error", MqttQos.exactlyOnce);
 }
 
 void publishSettingsMessage(String deviceID, Settings setting) {
