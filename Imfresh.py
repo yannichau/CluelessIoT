@@ -72,6 +72,7 @@ class Imfresh():
             self.measurement_times = [datetime.fromisoformat(time) for time in config["periodicMeasurementTimes"]] # list of strings
             self.wash_day = datetime.fromisoformat(config["washDay"]) # string
             self.prev_wash_day = datetime.fromisoformat(config["prevWashDay"]) # string
+            self.measurement_times.sort()
 
     def save_config(self):
     # Save configuration to config.yaml
