@@ -12,6 +12,7 @@ class DeviceReading with _$DeviceReading {
     required String deviceId,
     required double humidity,
     required double temperature,
+    // ignore: non_constant_identifier_names
     required double VOC,
   }) = _DeviceReading;
 

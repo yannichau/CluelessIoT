@@ -8,9 +8,9 @@ String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
 
 extension DateTimeExtension on DateTime {
   DateTime next(int day) {
-    return this.add(
+    return add(
       Duration(
-        days: (day - this.weekday) % DateTime.daysPerWeek,
+        days: (day - weekday) % DateTime.daysPerWeek,
       ),
     );
   }

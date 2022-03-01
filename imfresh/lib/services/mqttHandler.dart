@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:imfresh/models/settings.dart';
@@ -30,19 +31,18 @@ void connectClient() async {
     await client.connect();
   } on NoConnectionException catch (e) {
     // Raised by the client when connection fails.
-    print('EXAMPLE::client exception - $e');
+    log('EXAMPLE::client exception - $e');
     client.disconnect();
   } on SocketException catch (e) {
     // Raised by the socket layer
-    print('EXAMPLE::socket exception - $e');
+    log('EXAMPLE::socket exception - $e');
     client.disconnect();
   }
   if (client.connectionStatus!.state == MqttConnectionState.connected) {
-    print('MQTT client connected');
+    log('MQTT client connected');
   } else {
     /// Use status here rather than state if you also want the broker return code.
-    print(
-        'MQTT::ERROR  client connection failed - disconnecting, status is ${client.connectionStatus}');
+    log('MQTT::ERROR  client connection failed - disconnecting, status is ${client.connectionStatus}');
     client.disconnect();
   }
 }
@@ -87,13 +87,13 @@ void disconnectClient() {
 }
 
 void _onDisconnected() {
-  print('MQTT client disconnected');
+  log('MQTT client disconnected');
 }
 
 void _onConnected() {
-  print('MQTT client connected');
+  log('MQTT client connected');
 }
 
 void _onSubscribed(String topic) {
-  print('MQTT client subscribed to topic $topic');
+  log('MQTT client subscribed to topic $topic');
 }

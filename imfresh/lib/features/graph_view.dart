@@ -35,7 +35,6 @@ class _DataGraphViewState extends State<DataGraphView> {
       // final data = jsonDecode(pt);
       if (pt[0] == "[") {
         // try {
-        print("recieved list");
         var rawData = jsonDecode(pt);
         List<DeviceReading> readings = List<DeviceReading>.from(
             rawData.map((i) => DeviceReading.fromJson(i)));

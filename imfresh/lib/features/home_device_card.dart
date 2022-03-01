@@ -90,7 +90,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                 ),
               ),
               Expanded(
-                child: Container(
+                child: SizedBox(
                     height: 50,
                     child: realtimeMeasurementOn
                         ? TextButton(
@@ -127,7 +127,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                           )),
               ),
               Expanded(
-                child: Container(
+                child: SizedBox(
                   height: 50,
                   child: TextButton(
                     //tooltip: "View History",
@@ -330,7 +330,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
                 } else {
                   Map<String, dynamic> jsonBody =
                       json.decode(snapshot.data!.body);
-                  if (jsonBody["cod"] == 200) {
+                  if (jsonBody["cod"] == "200") {
                     List<int> data = [];
                     List<DateTime> timestamp = [];
                     List<DateTime> displayedLabels = [];
@@ -345,6 +345,7 @@ class _HomeDeviceCardState extends State<HomeDeviceCard>
 
                     DateTime current = timestamp.first;
                     displayedLabels.add(timestamp.first);
+                    displayedData.add(data.first);
 
                     for (var i = 0; i < timestamp.length; i++) {
                       if (current.day != timestamp[i].day) {

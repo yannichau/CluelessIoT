@@ -12,56 +12,11 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final List<Settings> test = [
-    Settings(
-        deviceId: "askdfjhdsklfhjkjasdhfjlsk",
-        deviceName: "Kitchen imfresh",
-        deviceLocation: "London",
-        alarmOn: true,
-        alarmTime: DateTime.now(),
-        realtimeMeasuringOn: true,
-        periodicMeasuringEnabled: false,
-        cleanlinessThreshold: 3),
-    Settings(
-        deviceId: "askdfjhdsklfhjkjasdhfjlk",
-        deviceName: "Laundry imfresh",
-        deviceLocation: "Singapore",
-        alarmOn: true,
-        alarmTime: DateTime.now(),
-        realtimeMeasuringOn: true,
-        periodicMeasuringEnabled: false,
-        cleanlinessThreshold: 5)
-  ];
-
-  final List<Widget> _sliders = [
-    DeviceSettingsCard(
-        initalSettings: Settings(
-            deviceId: "askdfjhdsklfhjkjasdhfjlsk",
-            deviceName: "Kitchen imfresh",
-            deviceLocation: "London",
-            alarmOn: true,
-            alarmTime: DateTime.now(),
-            realtimeMeasuringOn: true,
-            periodicMeasuringEnabled: false,
-            cleanlinessThreshold: 3)),
-    DeviceSettingsCard(
-        initalSettings: Settings(
-            deviceId: "askdfjhdsklfhjkjasdhfjlk",
-            deviceName: "Laundry imfresh",
-            deviceLocation: "Singapore",
-            alarmOn: true,
-            alarmTime: DateTime.now(),
-            realtimeMeasuringOn: true,
-            periodicMeasuringEnabled: false,
-            cleanlinessThreshold: 5)),
-  ];
-
   int _current = 0;
   final CarouselController _controller = CarouselController();
 
   @override
   Widget build(BuildContext context) {
-    // print(jsonEncode(test.map((e) => e.toJson()).toList()));
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),

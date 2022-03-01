@@ -56,7 +56,6 @@ class _NewDeviceState extends State<NewDevice> {
   }
 
   void _onQRViewCreated(QRViewController controller) async {
-    print("view created");
     setState(() {
       this.controller = controller;
     });

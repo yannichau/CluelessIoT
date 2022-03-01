@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:imfresh/services/mqttHandler.dart';
 import 'package:imfresh/services/shared_prefs_handler.dart';
 import 'package:imfresh/services/utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/settings.dart';
 import 'home_device_card.dart';
@@ -18,14 +17,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   @override
   void initState() {
-    // test();
     connectClient();
     super.initState();
-  }
-
-  void test() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    // await prefs.remove('deviceList');
   }
 
   @override
@@ -53,7 +46,7 @@ class _HomePageState extends State<HomePage> {
                       onPressed: () {
                         Navigator.pushNamed(context, '/settings')
                             .then((value) async {
-                          await Future.delayed(Duration(seconds: 1));
+                          await Future.delayed(const Duration(seconds: 1));
                           setState(() {});
                         });
                       },
@@ -161,7 +154,7 @@ class _HomePageState extends State<HomePage> {
                                                 _id.text = "$result";
                                               });
                                             },
-                                            icon: Icon(
+                                            icon: const Icon(
                                                 Icons.qr_code_scanner_sharp)),
                                       ),
                                     ],
@@ -227,7 +220,7 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ).then((value) async {
-            await Future.delayed(Duration(seconds: 1));
+            await Future.delayed(const Duration(seconds: 1));
             setState(() {});
           });
         },

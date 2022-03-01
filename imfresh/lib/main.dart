@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imfresh/features/home_page.dart';
-import 'package:imfresh/features/new_device.dart';
+import 'package:imfresh/features/qr_scanner.dart';
 import 'package:imfresh/services/databaseHandler.dart';
 import 'package:imfresh/services/mqttHandler.dart';
 
@@ -33,7 +33,7 @@ class App extends StatelessWidget {
       ),
       routes: {
         // When navigating to the "/" route, build the FirstScreen widget.
-        '/': (context) => HomePage(),
+        '/': (context) => const HomePage(),
         // When navigating to the "/second" route, build the SecondScreen widget.
         '/addDevice': (context) => const NewDevice(),
         '/settings': (context) => const SettingsPage(),
