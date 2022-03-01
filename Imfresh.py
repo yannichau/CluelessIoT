@@ -36,13 +36,14 @@ class Imfresh():
         self.next_time = datetime.fromisoformat('2022-01-01T12:00:00')
         self.prev_time = datetime.fromisoformat('2022-01-01T12:00:00')
         # Load current settings from config.yaml
+        self.save_config()
         self.load_config()
         # Initialise library
         self.sensor_library = Middleman()
         self.alarm_library = Alarm()
         # Initialise Logging
         logging.basicConfig(filename='Error.log', level=logging.DEBUG)
-        logging.info("INFO - Started Session at {}.", datetime.now())
+        logging.info(f"INFO - Started Session at {datetime.now()}.")
         # Initialise MQTT Client
         self.client = mqtt.Client("", True, None, mqtt.MQTTv31)
         # Initialise database
@@ -169,7 +170,7 @@ class Imfresh():
                     voc = 50 if voc > 50 else voc
                     self.record_data(voc, humidity, temperature, datetime.now(), "PeriodicTemp")
                 else:
-                    logging.error("ERROR {} - in periodic data collection at {}.", str(errval), datetime.now())
+                    logging.error(f"ERROR {str(errval)} - in periodic data collection at {datetime.now()}.")
             else:
                 voc_avg, humidity_avg, temperature_avg = self.average_data("PeriodicTemp")
                 if(voc_avg or humidity_avg or temperature_avg):
@@ -192,7 +193,7 @@ class Imfresh():
                 self.record_data(voc, humidity, temperature, datetime.now(), "RealTimeTemp")
                 datapoint += 1
             else:
-                logging.error("ERROR {} - in realtime data collection at {}.", str(errval), datetime.now())
+                logging.error(f"ERROR {str(errval)} - in realtime data collection at {datetime.now()}.")
         self.measuring_real_time = False
 
     def mqtt_send_data(self, voc, humidity, temperature, timestamp, type_data):
