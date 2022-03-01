@@ -245,7 +245,7 @@ class Imfresh():
                 file = open("Error.log", "rb")
                 error_log = file.read()
                 byte_array = bytes(error_log)
-                client.publish("self.id" + "/error", byte_array)
+                self.client.publish(self.id + "/error", byte_array)
             elif m_decode == "Washed":
                 self.prev_wash_day = datetime.now()
                 self.save_config()
@@ -256,7 +256,7 @@ class Imfresh():
                 data_con.close()
                 if len(periodic_data) != 0:
                     periodic_jsons = [json.dumps({"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]}) for row in periodic_data]
-                    self.client.publish("self.id" + "/data", periodic_jsons)
+                    self.client.publish(self.id + "/data", periodic_jsons)
             else:
                 print("Invalid Command Received")
         
