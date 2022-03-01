@@ -153,8 +153,11 @@ class Imfresh():
 
     def periodic(self):
     # Conduct periodic measurements
-        print("Starting periodic loop...")
+        print = True
         while self.do_periodic:
+            if print:
+                print("Periodic measurement...")
+                print = False
             if datetime.now() > self.next_time + timedelta(hours=self.measurement_interval):
                 no_time_available = True
                 for new_time in self.measurement_times:
@@ -183,10 +186,13 @@ class Imfresh():
 
     def realtime(self):
     # Conduct realtime measurements
-        print("Starting realtime loop...")
+        print = True
         start_time = datetime.now()
         datapoint = 0
         while self.do_real_time and datetime.now() < start_time + timedelta(minutes=15):
+            if print:
+                print("Starting realtime loop...")
+                print = False
             if(datapoint == 5):
                 datapoint = 0
                 voc_avg, humidity_avg, temperature_avg = self.average_data("RealTimeTemp")
