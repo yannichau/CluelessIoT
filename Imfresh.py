@@ -12,7 +12,7 @@ import math
 
 class Imfresh():
     # Address to communicate through MQTT. These must be set beforehand
-    IP_ADDRESS = "3.83.201.2380"
+    IP_ADDRESS = "3.83.201.238"
     PORT = 1883
 
     def __init__(self):
@@ -129,21 +129,25 @@ class Imfresh():
         data_cursor = self.data_con.cursor()
         periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", self.prev_wash_day.isoformat())).fetchall()
         self.data_con.close()
-        avg_humidity = 0
-        avg_temperature = 0
-        avg_voc = 0
-        fst_voc = periodic_data[0][1]
-        for row in periodic_data:
-            avg_humidity += row[2]
-            avg_temperature += row[3]
-            avg_voc += row[1]
-        avg_humidity = avg_humidity / len(periodic_data)
-        avg_temperature = avg_temperature / len(periodic_data)
-        avg_voc = avg_voc / len(periodic_data)
-        if(avg_voc > fst_voc):
-            eq1 = math.floor(self.cleanliness_threshold/(fst_voc - avg_voc))
-            eq2 = math.floor((avg_humidity/200 + avg_temperature/40) * 10)
-        self.wash_day = self.prev_wash_day + timedelta(days=min(eq1, eq2, 10))
+        if len(periodic_data) == 0:
+            self.wash_day = datetime.now()
+        else:
+            avg_humidity = 0
+            avg_temperature = 0
+            avg_voc = 0
+            fst_voc = periodic_data[0][1]
+            for row in periodic_data:
+                avg_humidity += row[2]
+                avg_temperature += row[3]
+                avg_voc += row[1]
+            avg_humidity = avg_humidity / len(periodic_data)
+            avg_temperature = avg_temperature / len(periodic_data)
+            avg_voc = avg_voc / len(periodic_data)
+            if(avg_voc > fst_voc):
+                eq1 = math.floor(self.cleanliness_threshold/(fst_voc - avg_voc))
+                eq2 = math.floor((avg_humidity/200 + avg_temperature/40) * 10)
+            self.wash_day = self.prev_wash_day + timedelta(days=min(eq1, eq2, 10))
+        self.wash_day = self.prev_wash_day + timedelta(days=10)
         if self.wash_day < datetime.now():
             self.wash_day = datetime.now()
 
