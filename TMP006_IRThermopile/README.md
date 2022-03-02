@@ -1,4 +1,4 @@
-# Instructions for using the Infrared Library
+# TMP006 Temperature Sensor Library
 
 ## 1. Interfacing
 
@@ -41,7 +41,7 @@ import smbus2
    ```python
    import IR_Library
    device = IR_Library.Infrared()
-   [temp, voltage] = device.collect_reading()
+   [temp, voltage, error] = device.collect_reading()
    ```
 
 ### 4. Useful methods
@@ -77,7 +77,7 @@ import smbus2
    def config(self, op_mode, adc_rate, drdyen)
    ```
 
-   Configure settings for the device. Parameters are confined in the same way as parameters for the constructor.
+   Configure settings (continuous/disabled operation mode, analogue to discrete conversion rate, and data ready enable bit) for the device. Parameters are confined in the same way as parameters for the constructor.
 
 4. Debug Configuration
 
@@ -94,8 +94,19 @@ import smbus2
 
 6. Collect Readings for temperature and voltage
 
+   To collect readings for an instance called "device":
+
    ```python
-   def collect_reading(self)
+   [temp,voltage, error] = device. collect_reading(self)
    ```
 
-   Returns a tuple `[temperature, voltage]`, with units degrees celsius and volts respectively.
+   The method returns a tuple `[temperature, voltage, error]`, with units degrees celsius and volts respectively. The error code format is as follows:
+
+   | Sensor  | Bit  | Error |
+   |---|---|---|
+   | TMP006  | 2  | Data out of range.   |
+   | TMP006  | 1  | Manufacturer or device ID is incorrect.  |
+   | TMP006  | 0  | Operation mode is invalid. For example, configuration register specified inactive, or invalid ADC (analogue digital conversion) rates.  |
+
+   Before returning the values, it calls `check_readings()` to verify the range of the values collected. Specifically the temperatures should be between -40 and 125°C.
+   

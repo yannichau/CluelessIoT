@@ -1,38 +1,29 @@
-# CluelessIoT: Mushrooms
+# CluelessIoT: ImFresh
 
-## Initial brainstorming
-1. IoT Ping Pong
-2. School bag
-3. Alarm: Motion sensors to track sleeping habits, bad dreams, wake you up
-4. IoT Calculator: lasts longer, camera for scans, send log to computer
-5. Lamp: motion sensor. adjust light automatically.measures room temperature and a corresponding light
-   1. Sensors: spectral light sensor, thermopile, air temperature and humidity sensor
-   2. Output: LED
-6. **Humidity + temperature sensor: alarm for when to air the bed or wash your mattress**
-   1. Air temperature and humidity sensor, thermopile, air quality sensor
-   2. Output: Sounder
-   3. Push button
-   4. IoT: Take in weather data - when you can dry your clothes outdoors
-7. Smart roller-blades: Tracking location, duration, skating exercise, calories burnt
-8. Seat monitor: Weight sensor on each sensor
-9. **Deaf translation: display for showing the british sign language**
-   1.  Braille implemented by 6 servo motors or 6 LEDs.
-   2.  Make our website blind-friendly
-   3.  Sensors: USB microphone, camera
+## Start
 
-## Tasks for now
-- [ ] Experiment with sensors: spectral light sensor, thermopile, air temperature and humidity sensor
-- [ ] Research the physics behind optimal humidity and temperature for sleeping
-- [ ] Correlation with weather?
+Run `python3 ./ImFresh.py` to initialise connections to the Raspberry Pi Zero and the AWS MQTT server. This also starts storing data in the local sqlite database.
 
-## Sensor Details
+## Folder structure
 
-1. TMP006: Thermopile (non-contact temperature sensor
-2. Si7021: Air temperature and humidity sensor https://github.com/ControlEverythingCommunity/SI7021 
-3. CCS811: Air quality sensor
+1. Hardware Libraries
+   1. Alarm: hardware buzzer
+   2. CCS811: Air quality sensor
+   3. SI7021: Temperature and humidity sensor
+   4. TMP006: Temperature sensor
+2. Middleman: Collates readings from all 3 sensors.
+3. `/imfresh`: Flutter app for displaying statistics and configuring device settings, such as measurement intervals.
+4. `Imfresh.py`: Master file to initialise connections to the Raspberry Pi Zero. Depending on the command sent from the app, this will put the device in real time mode or periodic mode, which returns averaged data to the server for statistics.
 
-Other potentially useful items
-1. D6F-V03A1: Air velocity sensor
-2. RGB LED
-3. Push Button
-4. Sounder
+## Marketing Material
+
+1. Promotional video: https://www.youtube.com/watch?v=jqBLdhIyjRM
+2. Website: https://yannichau.wixsite.com/imfresh/
+
+## Hardware connections on Raspberry Pi
+
+- 3V3, GND: connections to VCC/3V3 and GND for all devices
+- SCL, SDA: connections to SCL and SDA of TMP006 Temperature Sensor
+- 23: Acts as an SDA for the CCS811 and SI7021 sensors
+- 24: Acts as an SCL for the CCS811 and SI7021 sensors
+- 17: Simple output for the buzzer
