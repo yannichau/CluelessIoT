@@ -144,6 +144,8 @@ class Imfresh():
             avg_humidity = avg_humidity / len(periodic_data)
             avg_temperature = avg_temperature / len(periodic_data)
             avg_voc = avg_voc / len(periodic_data)
+            eq1 = 10000
+            eq2 = 10000
             if(avg_voc > fst_voc):
                 eq1 = math.floor(self.cleanliness_threshold/(fst_voc - avg_voc))
                 eq2 = math.floor((avg_humidity/200 + avg_temperature/40) * 10)
@@ -243,7 +245,8 @@ class Imfresh():
             self.do_real_time = m_in["realtimeMeasuringOn"]
             self.do_periodic = m_in["periodicMeasuringEnabled"]
             self.measurement_interval = m_in["periodicMeasuringTimePeriod"]
-            self.measurement_times = [datetime.fromisoformat(time) for time in m_in["measuringTimes"]].sort()
+            self.measurement_times = [datetime.fromisoformat(time) for time in m_in["measuringTimes"]]
+            self.measurement_times.sort()
             self.cleanliness_threshold = m_in["cleanlinessThreshold"]
             self.save_config()
         except ValueError:
@@ -262,7 +265,7 @@ class Imfresh():
                 periodic_data = data_cursor.execute("SELECT * FROM ImFreshData WHERE type = ? AND time > ? ORDER BY time ASC", ("PeriodicAvg", m_decode.split()[1])).fetchall()
                 data_con.close()
                 if len(periodic_data) != 0:
-                    periodic_jsons = [json.dumps({"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]}) for row in periodic_data]
+                    periodic_jsons = json.dumps([({"type": "periodic", "timestamp": row[0],"nextWash": self.wash_day.isoformat(), "deviceId": self.id, "humidity": row[2],"temperature": row[3],"VOC": row[1]}) for row in periodic_data])
                     self.client.publish(self.id + "/data", periodic_jsons)
             else:
                 print("Invalid Command Received")
