@@ -13,3 +13,5 @@ The `lib` directory holds most of the source code and contains the following sub
   - `services`: Contains the handlers for MQTT, SQLITE, Shared Preferences and Weather
   - `features`: Contains the pages and cards for the app
 
+## Getting Started
+run `flutter pub get` to download the necesssary packages, and then run `flutter pub run build_runner build` to build generated files, and finallly run the app using IDE tools or `flutter run`.

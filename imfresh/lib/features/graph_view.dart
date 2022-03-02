@@ -188,10 +188,10 @@ class _DataGraphViewState extends State<DataGraphView> {
   List<charts.Series<DeviceReading, DateTime>> _convertTempData() {
     return [
       charts.Series<DeviceReading, DateTime>(
-        id: 'Sales',
+        id: 'readings',
         colorFn: (_, __) => charts.MaterialPalette.green.shadeDefault,
-        domainFn: (DeviceReading sales, _) => sales.timestamp,
-        measureFn: (DeviceReading sales, _) => sales.temperature,
+        domainFn: (DeviceReading readings, _) => readings.timestamp,
+        measureFn: (DeviceReading readings, _) => readings.temperature,
         data: _deviceReadings,
       )
     ];
@@ -200,10 +200,10 @@ class _DataGraphViewState extends State<DataGraphView> {
   List<charts.Series<DeviceReading, DateTime>> _convertHumdData() {
     return [
       charts.Series<DeviceReading, DateTime>(
-        id: 'Sales',
+        id: 'readings',
         colorFn: (_, __) => charts.MaterialPalette.green.shadeDefault,
-        domainFn: (DeviceReading sales, _) => sales.timestamp,
-        measureFn: (DeviceReading sales, _) => sales.temperature,
+        domainFn: (DeviceReading readings, _) => readings.timestamp,
+        measureFn: (DeviceReading readings, _) => readings.humidity,
         data: _deviceReadings,
       )
     ];
@@ -212,10 +212,10 @@ class _DataGraphViewState extends State<DataGraphView> {
   List<charts.Series<DeviceReading, DateTime>> _convertVocData() {
     return [
       charts.Series<DeviceReading, DateTime>(
-        id: 'Sales',
+        id: 'readings',
         colorFn: (_, __) => charts.MaterialPalette.green.shadeDefault,
-        domainFn: (DeviceReading sales, _) => sales.timestamp,
-        measureFn: (DeviceReading sales, _) => sales.temperature,
+        domainFn: (DeviceReading readings, _) => readings.timestamp,
+        measureFn: (DeviceReading readings, _) => readings.VOC,
         data: _deviceReadings,
       )
     ];
@@ -260,16 +260,16 @@ class SlidingViewportOnSelection extends StatelessWidget {
       // initial chart load.
       domainAxis: charts.DateTimeAxisSpec(
           viewport: charts.DateTimeExtents(
-              start: DateTime.now().subtract(const Duration(days: 14)),
+              start: DateTime.now().subtract(const Duration(days: 7)),
               end: DateTime.now())),
     );
   }
 }
 
 /// Sample ordinal data type.
-class OrdinalSales {
+class Ordinalreadings {
   final String year;
-  final int sales;
+  final int readings;
 
-  OrdinalSales(this.year, this.sales);
+  Ordinalreadings(this.year, this.readings);
 }
