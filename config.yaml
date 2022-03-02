@@ -1,10 +1,21 @@
-deviceId:
-deviceName:
-alarmStatus:
-alarmTime:
-deviceLocation:
-doRealTime:
-doPeriodic:
-periodicMeasurementTimePeriod:
+alarmStatus: true
+alarmTime: '2022-03-01T18:17:00'
+deviceId: asu343ui41823jisdjajdio1jo2i
+deviceLocation: London
+deviceName: Laundry Basket
+doPeriodic: true
+doRealTime: true
+periodicMeasurementTimePeriod: 3
 periodicMeasurementTimes:
-washDay:
+- '2022-03-02T01:00:00'
+- '2022-03-02T12:00:00'
+- '2022-03-03T01:00:00'
+- '2022-03-04T01:00:00'
+- '2022-03-04T12:00:00'
+- '2022-03-05T01:00:00'
+- '2022-03-06T01:00:00'
+- '2022-03-07T01:00:00'
+- '2022-03-07T12:00:00'
+- '2022-03-08T01:00:00'
+prevWashDay: '2022-02-28T12:00:00'
+washDay: '2022-03-10T12:00:00'
